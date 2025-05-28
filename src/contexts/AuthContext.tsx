@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -62,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Existing session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -75,13 +77,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+      }
+      console.log('Profile fetched:', data);
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -101,6 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // For now, we'll simulate it or get it from a service
       const response = await fetch('https://api.ipify.org?format=json');
       const { ip: currentIP } = await response.json();
+      console.log('Current IP:', currentIP);
+      console.log('Admin IPs:', adminIPs);
 
       // Check if current IP matches any admin IP
       return adminIPs.some(adminIP => adminIP.ip_address === currentIP);
@@ -112,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string, isAdmin: boolean) => {
     try {
+      console.log('Signing up user:', email, 'isAdmin:', isAdmin);
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -133,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           : "Student account created successfully. You can now log in.",
       });
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         title: "Registration Failed",
         description: error.message,
@@ -145,45 +156,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string, userIP?: string) => {
     try {
       setLoading(true);
+      console.log('Attempting to sign in:', email);
 
-      // First, check if email exists in profiles
+      // First, attempt to authenticate with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
+      }
+
+      if (!authData.user) {
+        throw new Error('Authentication failed');
+      }
+
+      console.log('Auth successful, checking profile...');
+
+      // Now check the user profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('email', email)
+        .eq('user_id', authData.user.id)
         .single();
 
       if (profileError || !profileData) {
-        throw new Error('Email not found in our system');
+        console.error('Profile error:', profileError);
+        // Sign out the user if profile doesn't exist
+        await supabase.auth.signOut();
+        throw new Error('User profile not found. Please contact administrator.');
       }
+
+      console.log('Profile found:', profileData);
 
       // Check user type and apply logic
       if (profileData.is_student) {
         // For students, check IP access
         const hasIPAccess = await checkIPAccess();
         if (!hasIPAccess) {
+          await supabase.auth.signOut();
           throw new Error('Connect to the exam LAN');
         }
       } else if (profileData.is_admin) {
         // For admins, check if approved
         if (!profileData.admin_approved) {
+          await supabase.auth.signOut();
           throw new Error('Admin account not approved yet. Please contact system administrator.');
         }
       }
 
-      // Proceed with authentication
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
       // Store admin IP if admin login
-      if (profileData.is_admin && data.user) {
+      if (profileData.is_admin && authData.user) {
         try {
           const response = await fetch('https://api.ipify.org?format=json');
           const { ip } = await response.json();
+          console.log('Storing admin IP:', ip);
           
           await supabase
             .from('admin_ips')
@@ -202,6 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Login Failed",
         description: error.message,
