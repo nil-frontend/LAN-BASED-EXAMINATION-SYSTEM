@@ -103,17 +103,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('ip_address')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching latest admin IP:', error);
         return null;
       }
 
-      // Convert inet type to string safely
-      const ipAddress = latestAdminIP?.ip_address ? String(latestAdminIP.ip_address) : null;
-      console.log('Latest admin IP found:', ipAddress);
-      return ipAddress;
+      if (!latestAdminIP) {
+        console.log('No admin IP records found in database');
+        return null;
+      }
+
+      // Handle inet type - it comes as a string from Supabase
+      const ipAddress = latestAdminIP.ip_address;
+      console.log('Latest admin IP found:', ipAddress, 'Type:', typeof ipAddress);
+      return ipAddress || null;
     } catch (error) {
       console.error('Error getting latest admin IP:', error);
       return null;
