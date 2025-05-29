@@ -115,10 +115,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      // Handle inet type - it comes as a string from Supabase
-      const ipAddress = latestAdminIP.ip_address;
+      // Handle inet type - convert to string safely
+      const ipAddress = String(latestAdminIP.ip_address);
       console.log('Latest admin IP found:', ipAddress, 'Type:', typeof ipAddress);
-      return ipAddress || null;
+      return ipAddress;
     } catch (error) {
       console.error('Error getting latest admin IP:', error);
       return null;
