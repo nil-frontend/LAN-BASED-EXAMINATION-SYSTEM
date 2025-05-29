@@ -173,9 +173,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Authentication failed');
       }
 
-      console.log('Auth successful, checking profile...');
+      console.log('Auth successful, fetching profile...');
 
-      // Now check the user profile
+      // Fetch the user profile after successful authentication
+      await fetchUserProfile(authData.user.id);
+
+      // Get the profile to check user type and conditions
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -184,14 +187,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (profileError || !profileData) {
         console.error('Profile error:', profileError);
-        // Sign out the user if profile doesn't exist
         await supabase.auth.signOut();
         throw new Error('User profile not found. Please contact administrator.');
       }
 
       console.log('Profile found:', profileData);
 
-      // Check user type and apply logic
+      // Check user type and apply logic conditions
       if (profileData.is_student) {
         // For students, check IP access
         const hasIPAccess = await checkIPAccess();
