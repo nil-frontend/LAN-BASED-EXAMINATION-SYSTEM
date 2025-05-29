@@ -110,8 +110,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      console.log('Latest admin IP found:', latestAdminIP?.ip_address);
-      return latestAdminIP?.ip_address || null;
+      // Convert inet type to string safely
+      const ipAddress = latestAdminIP?.ip_address ? String(latestAdminIP.ip_address) : null;
+      console.log('Latest admin IP found:', ipAddress);
+      return ipAddress;
     } catch (error) {
       console.error('Error getting latest admin IP:', error);
       return null;
