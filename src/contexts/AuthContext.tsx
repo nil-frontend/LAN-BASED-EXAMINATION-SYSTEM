@@ -121,9 +121,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getCurrentUserIP = async (): Promise<string | null> => {
     try {
       const response = await fetch('https://api.ipify.org?format=json');
-      const { ip } = await response.json();
-      console.log('Current user IP:', ip);
-      return ip;
+      const data: { ip: string } = await response.json();
+      console.log('Current user IP:', data.ip);
+      return data.ip;
     } catch (error) {
       console.error('Error getting current IP:', error);
       return null;
