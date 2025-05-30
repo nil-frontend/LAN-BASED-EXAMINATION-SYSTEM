@@ -95,36 +95,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const getLatestAdminIP = async (): Promise<string | null> => {
-    try {
-      console.log('Fetching latest admin IP...');
-      const { data: latestAdminIP, error } = await supabase
-        .from('admin_ips')
-        .select('ip_address')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching latest admin IP:', error);
-        return null;
-      }
-
-      if (!latestAdminIP) {
-        console.log('No admin IP records found in database');
-        return null;
-      }
-
-      // Handle inet type - convert to string safely
-      const ipAddress = String(latestAdminIP.ip_address);
-      console.log('Latest admin IP found:', ipAddress, 'Type:', typeof ipAddress);
-      return ipAddress;
-    } catch (error) {
-      console.error('Error getting latest admin IP:', error);
-      return null;
-    }
-  };
-
   const getCurrentUserIP = async (): Promise<string | null> => {
     try {
       const response = await fetch('https://api.ipify.org?format=json');
@@ -138,6 +108,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error getting current IP:', error);
       return null;
+    }
+  };
+
+  const verifyStudentIPAccess = async (): Promise<boolean> => {
+    try {
+      console.log('Verifying student IP access...');
+      
+      // Get the most recent admin IP by sorting by created_at descending
+      const { data: latestAdminIP, error } = await supabase
+        .from('admin_ips')
+        .select('ip_address, created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching latest admin IP:', error);
+        throw new Error('Failed to verify IP access. Please contact administrator.');
+      }
+
+      if (!latestAdminIP) {
+        console.log('No admin IP records found in database');
+        throw new Error('No admin IP found. Please contact administrator.');
+      }
+
+      // Convert inet type to string safely
+      const adminIP = String(latestAdminIP.ip_address);
+      console.log('Latest admin IP found:', adminIP, 'created at:', latestAdminIP.created_at);
+
+      // Get current user IP
+      const currentUserIP = await getCurrentUserIP();
+      
+      if (!currentUserIP) {
+        throw new Error('Could not verify your IP address. Please try again.');
+      }
+
+      console.log('Comparing IPs - Admin:', adminIP, 'Student:', currentUserIP);
+
+      // Check if current IP matches the latest admin IP
+      if (currentUserIP !== adminIP) {
+        throw new Error('Connect to the exam LAN');
+      }
+
+      console.log('Student IP verification successful');
+      return true;
+      
+    } catch (error) {
+      console.error('Error in IP verification:', error);
+      throw error;
     }
   };
 
@@ -221,29 +240,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileData.is_student) {
         console.log('Student login - checking IP access...');
         
-        // Get the latest admin IP from the database
-        const latestAdminIP = await getLatestAdminIP();
-        
-        if (!latestAdminIP) {
-          await supabase.auth.signOut();
-          throw new Error('No admin IP found. Please contact administrator.');
-        }
-
-        // Get current user IP
-        const currentUserIP = await getCurrentUserIP();
-        
-        if (!currentUserIP) {
-          await supabase.auth.signOut();
-          throw new Error('Could not verify your IP address. Please try again.');
-        }
-
-        // Check if current IP matches the latest admin IP
-        if (currentUserIP !== latestAdminIP) {
-          await supabase.auth.signOut();
-          throw new Error('Connect to the exam LAN');
-        }
-
-        console.log('Student IP verification successful');
+        // Verify student IP access using the single function
+        await verifyStudentIPAccess();
         
       } else if (profileData.is_admin) {
         console.log('Admin login - checking approval status...');
