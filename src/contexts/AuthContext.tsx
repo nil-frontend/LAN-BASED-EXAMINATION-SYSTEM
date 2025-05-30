@@ -20,7 +20,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, fullName: string, isAdmin: boolean) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, userIP?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -95,56 +95,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const getLatestAdminIP = async (): Promise<string | null> => {
+  const checkIPAccess = async (): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
+      // Get admin IPs from database
+      const { data: adminIPs, error } = await supabase
         .from('admin_ips')
-        .select('ip_address')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .select('ip_address');
 
-      if (error) {
-        console.error('Error fetching admin IP:', error);
-        return null;
-      }
+      if (error) throw error;
 
-      return data ? String(data.ip_address) : null;
-    } catch (error) {
-      console.error('Error getting latest admin IP:', error);
-      return null;
-    }
-  };
-
-  const getCurrentUserIP = async (): Promise<string | null> => {
-    try {
+      // Get user's current IP (in a real app, you'd get this from the client)
+      // For now, we'll simulate it or get it from a service
       const response = await fetch('https://api.ipify.org?format=json');
-      const { ip } = await response.json();
-      return ip;
+      const { ip: currentIP } = await response.json();
+      console.log('Current IP:', currentIP);
+      console.log('Admin IPs:', adminIPs);
+
+      // Check if current IP matches any admin IP
+      return adminIPs.some(adminIP => adminIP.ip_address === currentIP);
     } catch (error) {
-      console.error('Error getting current IP:', error);
-      return null;
-    }
-  };
-
-  const verifyStudentIPAccess = async (): Promise<boolean> => {
-    try {
-      const [latestAdminIP, currentIP] = await Promise.all([
-        getLatestAdminIP(),
-        getCurrentUserIP()
-      ]);
-
-      console.log('Latest admin IP:', latestAdminIP);
-      console.log('Current student IP:', currentIP);
-
-      if (!latestAdminIP || !currentIP) {
-        console.error('Could not retrieve IPs for comparison');
-        return false;
-      }
-
-      return latestAdminIP === currentIP;
-    } catch (error) {
-      console.error('Error verifying student IP access:', error);
+      console.error('Error checking IP access:', error);
       return false;
     }
   };
@@ -152,8 +122,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string, isAdmin: boolean) => {
     try {
       console.log('Signing up user:', email, 'isAdmin:', isAdmin);
-      
-      // Sign up the user but don't sign them in automatically
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -171,8 +139,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Registration Successful",
         description: isAdmin 
-          ? "Admin account created. Please log in and wait for approval."
-          : "Student account created successfully. Please log in to continue.",
+          ? "Admin account created. Please wait for approval before logging in."
+          : "Student account created successfully. You can now log in.",
       });
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -185,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, userIP?: string) => {
     try {
       setLoading(true);
       console.log('Attempting to sign in:', email);
@@ -208,6 +176,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Auth successful, fetching profile...');
 
       // Fetch the user profile after successful authentication
+      await fetchUserProfile(authData.user.id);
+
+      // Get the profile to check user type and conditions
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -224,11 +195,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Check user type and apply logic conditions
       if (profileData.is_student) {
-        // For students, check IP access against latest admin IP
-        const hasIPAccess = await verifyStudentIPAccess();
+        // For students, check IP access
+        const hasIPAccess = await checkIPAccess();
         if (!hasIPAccess) {
           await supabase.auth.signOut();
-          throw new Error('Access denied. Please connect to the exam network.');
+          throw new Error('Connect to the exam LAN');
         }
       } else if (profileData.is_admin) {
         // For admins, check if approved
@@ -236,20 +207,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await supabase.auth.signOut();
           throw new Error('Admin account not approved yet. Please contact system administrator.');
         }
+      }
 
-        // Store admin IP if admin login is successful
+      // Store admin IP if admin login
+      if (profileData.is_admin && authData.user) {
         try {
-          const currentIP = await getCurrentUserIP();
-          if (currentIP) {
-            console.log('Storing admin IP:', currentIP);
-            
-            await supabase
-              .from('admin_ips')
-              .insert({
-                admin_id: profileData.id,
-                ip_address: currentIP
-              });
-          }
+          const response = await fetch('https://api.ipify.org?format=json');
+          const { ip } = await response.json();
+          console.log('Storing admin IP:', ip);
+          
+          await supabase
+            .from('admin_ips')
+            .upsert({
+              admin_id: profileData.id,
+              ip_address: ip
+            });
         } catch (ipError) {
           console.error('Error storing admin IP:', ipError);
         }
