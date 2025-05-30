@@ -97,18 +97,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyStudentIPAccess = async (): Promise<boolean> => {
     try {
-      // Get the latest admin IP from admin_ips table sorted by created_at
-      const { data: latestAdminIP, error: adminIPError } = await supabase
+      console.log('Starting IP verification for student...');
+      
+      // Get all admin IPs sorted by created_at (most recent first)
+      const { data: adminIPs, error: adminIPError } = await supabase
         .from('admin_ips')
-        .select('ip_address')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .select('ip_address, created_at')
+        .order('created_at', { ascending: false });
 
-      if (adminIPError || !latestAdminIP) {
-        console.error('Error fetching latest admin IP:', adminIPError);
+      console.log('Admin IPs fetched:', adminIPs);
+
+      if (adminIPError) {
+        console.error('Error fetching admin IPs:', adminIPError);
         return false;
       }
+
+      // Check if we have any admin IPs
+      if (!adminIPs || adminIPs.length === 0) {
+        console.log('No admin IPs found in database');
+        return false;
+      }
+
+      // Get the most recent admin IP (0th index)
+      const latestAdminIP = adminIPs[0];
+      console.log('Latest admin IP record:', latestAdminIP);
 
       // Get student's current IP
       const response = await fetch('https://api.ipify.org?format=json');
@@ -119,9 +131,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Compare IPs (convert admin IP to string since it's stored as inet type)
       const adminIPString = String(latestAdminIP.ip_address);
-      return adminIPString === currentIP;
+      const ipMatch = adminIPString === currentIP;
+      
+      console.log('IP match result:', ipMatch);
+      return ipMatch;
     } catch (error) {
-      console.error('Error checking IP access:', error);
+      console.error('Error in IP verification:', error);
       return false;
     }
   };
@@ -202,18 +217,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Check user type and apply authentication logic
       if (profileData.is_student) {
+        console.log('Student login detected, checking IP access...');
         // For students, check IP access against latest admin IP
         const hasIPAccess = await verifyStudentIPAccess();
         if (!hasIPAccess) {
           await supabase.auth.signOut();
           throw new Error('Access denied. Please connect to the exam network.');
         }
+        console.log('Student IP verification passed');
       } else if (profileData.is_admin) {
+        console.log('Admin login detected, checking approval status...');
         // For admins, check if approved
         if (!profileData.admin_approved) {
           await supabase.auth.signOut();
           throw new Error('Admin account not approved yet. Please contact system administrator.');
         }
+        console.log('Admin approval check passed');
       }
 
       // Store admin IP if admin login (after approval check)
