@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,13 +6,17 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AdminSidebar from './AdminSidebar';
 import CreateExamDialog from './CreateExamDialog';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
+import EditExamDialog from './EditExamDialog';
+import MockTestDialog from './MockTestDialog';
 import { 
   FileText,
   Users,
   BarChart3,
   Trophy,
   Medal,
-  Award
+  Award,
+  Clock,
+  Calendar
 } from 'lucide-react';
 
 interface ExamResult {
@@ -106,6 +109,20 @@ const AdminDashboard = () => {
     }
   };
 
+  const formatDateTime = (dateString: string | null) => {
+    if (!dateString) return 'Not scheduled';
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getExamStatus = (exam: any) => {
+    if (!exam.exam_start_at) return 'available';
+    const now = new Date();
+    const startTime = new Date(exam.exam_start_at);
+    
+    if (now >= startTime) return 'started';
+    return 'scheduled';
+  };
+
   const renderOverview = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -180,23 +197,67 @@ const AdminDashboard = () => {
       <CardContent>
         {exams.length > 0 ? (
           <div className="space-y-4">
-            {exams.map((exam: any) => (
-              <div key={exam.id} className="border rounded-lg p-4">
-                <h3 className="font-semibold">{exam.title}</h3>
-                <p className="text-sm text-muted-foreground">{exam.description}</p>
-                <div className="flex gap-4 mt-2 text-sm">
-                  <span>Duration: {exam.duration_minutes} mins</span>
-                  <span>Total Marks: {exam.total_marks}</span>
-                  <span>Status: {exam.is_active ? 'Active' : 'Inactive'}</span>
-                </div>
-              </div>
-            ))}
+            {exams.map((exam: any) => {
+              const status = getExamStatus(exam);
+              return (
+                <Card key={exam.id} className="border-l-4 border-l-primary">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <CardTitle className="text-xl mb-1">{exam.title}</CardTitle>
+                        <p className="text-sm text-muted-foreground mb-2">{exam.exam_name}</p>
+                        <p className="text-sm text-muted-foreground">{exam.description}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <EditExamDialog exam={exam} onExamUpdated={fetchExams} />
+                        <MockTestDialog exam={exam} />
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <Clock className="h-5 w-5 mx-auto mb-1 text-blue-600" />
+                        <div className="text-sm font-medium">{exam.duration_minutes} mins</div>
+                        <div className="text-xs text-muted-foreground">Duration</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <Award className="h-5 w-5 mx-auto mb-1 text-green-600" />
+                        <div className="text-sm font-medium">{exam.total_marks}</div>
+                        <div className="text-xs text-muted-foreground">Total Marks</div>
+                      </div>
+                      <div className="text-center p-3 bg-purple-50 rounded-lg">
+                        <BarChart3 className="h-5 w-5 mx-auto mb-1 text-purple-600" />
+                        <div className="text-sm font-medium">{status === 'started' ? 'Active' : status === 'scheduled' ? 'Scheduled' : 'Available'}</div>
+                        <div className="text-xs text-muted-foreground">Status</div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded-lg">
+                        <FileText className="h-5 w-5 mx-auto mb-1 text-orange-600" />
+                        <div className="text-sm font-medium">{exam.is_active ? 'Active' : 'Inactive'}</div>
+                        <div className="text-xs text-muted-foreground">Visibility</div>
+                      </div>
+                    </div>
+                    
+                    {exam.exam_start_at && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-yellow-600" />
+                          <span className="text-sm font-medium text-yellow-800">
+                            Scheduled for: {formatDateTime(exam.exam_start_at)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
-          <div className="text-center py-8">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <div className="text-center py-12">
+            <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No exams yet</h3>
-            <p className="text-gray-600 mb-4">Create your first exam to get started</p>
+            <p className="text-gray-600 mb-6">Create your first exam to get started</p>
             <CreateExamDialog />
           </div>
         )}

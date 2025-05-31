@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import StudentSidebar from './StudentSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
+import TakeExamDialog from './TakeExamDialog';
 import { 
   Clock, 
   Award, 
@@ -103,37 +104,37 @@ const StudentDashboard = () => {
   const renderExams = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Available Exams</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.availableExams}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.availableExams}</div>
             <p className="text-xs text-muted-foreground">
               Ready to take
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
+            <Award className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.completedExams}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.completedExams}</div>
             <p className="text-xs text-muted-foreground">
               Exams taken
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-purple-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-purple-600">
               {stats.averageScore > 0 ? `${stats.averageScore}%` : '-'}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -145,7 +146,10 @@ const StudentDashboard = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Available Exams</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Available Exams
+          </CardTitle>
           <CardDescription>Exams you can participate in</CardDescription>
         </CardHeader>
         <CardContent>
@@ -156,68 +160,88 @@ const StudentDashboard = () => {
                 const canStart = examStatus === 'started' || examStatus === 'available';
                 
                 return (
-                  <div key={exam.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{exam.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{exam.description}</p>
-                        <div className="flex gap-4 text-sm mb-3">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {exam.duration_minutes} mins
-                          </span>
-                          <span>Total Marks: {exam.total_marks}</span>
-                          {exam.exam_start_at && (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {formatDateTime(exam.exam_start_at)}
-                            </span>
-                          )}
+                  <Card key={exam.id} className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg mb-1">{exam.title}</CardTitle>
+                          <p className="text-sm text-muted-foreground mb-2">{exam.exam_name}</p>
+                          <p className="text-sm text-muted-foreground">{exam.description}</p>
                         </div>
                         
-                        {examStatus === 'scheduled' && (
-                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Scheduled for {formatDateTime(exam.exam_start_at)}
+                        <div className="flex items-center gap-3">
+                          {examStatus === 'scheduled' && (
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800 border border-yellow-200">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Scheduled
+                            </div>
+                          )}
+                          
+                          {examStatus === 'started' && (
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                              <Play className="h-3 w-3 mr-1" />
+                              Started
+                            </div>
+                          )}
+                          
+                          {examStatus === 'available' && (
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800 border border-blue-200">
+                              <FileText className="h-3 w-3 mr-1" />
+                              Available
+                            </div>
+                          )}
+                          
+                          {canStart ? (
+                            <TakeExamDialog exam={exam} onExamCompleted={fetchResults} />
+                          ) : (
+                            <Button size="sm" disabled variant="outline">
+                              <Clock className="h-4 w-4 mr-2" />
+                              Scheduled
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="pt-0">
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="text-center p-3 bg-blue-50 rounded-lg">
+                          <Clock className="h-5 w-5 mx-auto mb-1 text-blue-600" />
+                          <div className="text-sm font-medium">{exam.duration_minutes} mins</div>
+                          <div className="text-xs text-muted-foreground">Duration</div>
+                        </div>
+                        <div className="text-center p-3 bg-green-50 rounded-lg">
+                          <Award className="h-5 w-5 mx-auto mb-1 text-green-600" />
+                          <div className="text-sm font-medium">{exam.total_marks}</div>
+                          <div className="text-xs text-muted-foreground">Total Marks</div>
+                        </div>
+                        <div className="text-center p-3 bg-purple-50 rounded-lg">
+                          <Calendar className="h-5 w-5 mx-auto mb-1 text-purple-600" />
+                          <div className="text-sm font-medium">
+                            {exam.exam_start_at ? formatDateTime(exam.exam_start_at) : 'Anytime'}
                           </div>
-                        )}
-                        
-                        {examStatus === 'started' && (
-                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                            <Play className="h-3 w-3 mr-1" />
-                            Exam Started
-                          </div>
-                        )}
-                        
-                        {examStatus === 'available' && (
-                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                            <FileText className="h-3 w-3 mr-1" />
-                            Available Now
-                          </div>
-                        )}
+                          <div className="text-xs text-muted-foreground">Start Time</div>
+                        </div>
                       </div>
                       
-                      <div className="ml-4">
-                        {canStart ? (
-                          <Button size="sm">
-                            <Play className="h-4 w-4 mr-2" />
-                            Start Exam
-                          </Button>
-                        ) : (
-                          <Button size="sm" disabled>
-                            <Clock className="h-4 w-4 mr-2" />
-                            Scheduled
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                      {exam.exam_start_at && examStatus === 'scheduled' && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-yellow-600" />
+                            <span className="text-sm font-medium text-yellow-800">
+                              Scheduled for: {formatDateTime(exam.exam_start_at)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <div className="text-center py-12">
+              <Clock className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No exams available</h3>
               <p className="text-gray-600">Check back later for new exams</p>
             </div>
