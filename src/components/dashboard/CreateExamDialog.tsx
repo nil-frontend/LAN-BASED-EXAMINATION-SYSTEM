@@ -34,7 +34,7 @@ const CreateExamDialog = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const [examData, setExamData] = useState({
+  const [examForm, setExamForm] = useState({
     title: '',
     description: '',
     duration_minutes: 60,
@@ -89,12 +89,12 @@ const CreateExamDialog = () => {
       const totalMarks = calculateTotalMarks();
       
       // Create exam
-      const { data: examData, error: examError } = await supabase
+      const { data: createdExam, error: examError } = await supabase
         .from('exams')
         .insert({
-          title: examData.title,
-          description: examData.description,
-          duration_minutes: examData.duration_minutes,
+          title: examForm.title,
+          description: examForm.description,
+          duration_minutes: examForm.duration_minutes,
           total_marks: totalMarks,
           created_by: profile?.id
         })
@@ -106,7 +106,7 @@ const CreateExamDialog = () => {
       // Create questions
       const questionsToInsert = questions.map(q => ({
         ...q,
-        exam_id: examData.id
+        exam_id: createdExam.id
       }));
 
       const { error: questionsError } = await supabase
@@ -121,7 +121,7 @@ const CreateExamDialog = () => {
       });
 
       // Reset form
-      setExamData({
+      setExamForm({
         title: '',
         description: '',
         duration_minutes: 60,
@@ -172,8 +172,8 @@ const CreateExamDialog = () => {
               <Label htmlFor="title">Exam Title</Label>
               <Input
                 id="title"
-                value={examData.title}
-                onChange={(e) => setExamData({...examData, title: e.target.value})}
+                value={examForm.title}
+                onChange={(e) => setExamForm({...examForm, title: e.target.value})}
                 required
               />
             </div>
@@ -182,8 +182,8 @@ const CreateExamDialog = () => {
               <Input
                 id="duration"
                 type="number"
-                value={examData.duration_minutes}
-                onChange={(e) => setExamData({...examData, duration_minutes: parseInt(e.target.value)})}
+                value={examForm.duration_minutes}
+                onChange={(e) => setExamForm({...examForm, duration_minutes: parseInt(e.target.value)})}
                 required
               />
             </div>
@@ -193,8 +193,8 @@ const CreateExamDialog = () => {
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={examData.description}
-              onChange={(e) => setExamData({...examData, description: e.target.value})}
+              value={examForm.description}
+              onChange={(e) => setExamForm({...examForm, description: e.target.value})}
             />
           </div>
 

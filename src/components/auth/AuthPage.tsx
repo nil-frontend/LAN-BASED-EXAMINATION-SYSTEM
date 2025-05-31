@@ -27,13 +27,15 @@ const AuthPage = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await signUp(signupForm.email, signupForm.password, signupForm.fullName, signupForm.isAdmin);
-    
-    if (!result.error) {
+    try {
+      await signUp(signupForm.email, signupForm.password, signupForm.fullName, signupForm.isAdmin);
+      
       // Reset form and switch to login tab after successful signup
       setSignupForm({ email: '', password: '', fullName: '', isAdmin: false });
       setActiveTab('login');
       setLoginForm({ email: signupForm.email, password: '' });
+    } catch (error) {
+      console.error('Signup error:', error);
     }
   };
 
