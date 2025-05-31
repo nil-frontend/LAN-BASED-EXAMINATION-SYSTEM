@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,9 +41,11 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
   const [isTestStarted, setIsTestStarted] = useState(false);
   const [isTestCompleted, setIsTestCompleted] = useState(false);
   const [examResultId, setExamResultId] = useState<string | null>(null);
+  const [hasAlreadyTaken, setHasAlreadyTaken] = useState(false);
 
   useEffect(() => {
     if (exam && open && !isTestStarted) {
+      checkIfAlreadyTaken();
       fetchQuestions();
     }
   }, [exam, open, isTestStarted]);
@@ -60,6 +61,24 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
     }
     return () => clearTimeout(timer);
   }, [timeLeft, isTestStarted, isTestCompleted]);
+
+  const checkIfAlreadyTaken = async () => {
+    if (!profile?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('exam_results')
+        .select('id')
+        .eq('exam_id', exam.id)
+        .eq('student_id', profile.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setHasAlreadyTaken(!!data);
+    } catch (error) {
+      console.error('Error checking if exam already taken:', error);
+    }
+  };
 
   const fetchQuestions = async () => {
     try {
@@ -191,6 +210,38 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
     setExamResultId(null);
   };
 
+  if (hasAlreadyTaken) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button size="sm" disabled variant="outline">
+            <Play className="h-4 w-4 mr-2" />
+            Already Taken
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Exam Already Completed</DialogTitle>
+            <DialogDescription>
+              You have already taken this exam
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-center">
+            <div className="text-lg text-green-600 font-medium">
+              You have already completed this exam
+            </div>
+            <div className="text-sm text-muted-foreground">
+              You can view your results in the "My Results" section
+            </div>
+            <Button onClick={() => setOpen(false)} className="w-full">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   if (!isTestStarted && !isTestCompleted) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
@@ -217,6 +268,7 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
                     <li>You cannot pause the exam once started</li>
                     <li>Make sure you have stable internet connection</li>
                     <li>Your answers will be automatically saved</li>
+                    <li>You can only take this exam once</li>
                   </ul>
                 </div>
               </div>

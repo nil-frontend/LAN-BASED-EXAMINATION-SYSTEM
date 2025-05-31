@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +8,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import StudentSidebar from './StudentSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
 import TakeExamDialog from './TakeExamDialog';
+import ConnectionStatus from './ConnectionStatus';
 import { 
   Clock, 
   Award, 
@@ -14,7 +16,8 @@ import {
   FileText,
   TrendingUp,
   Calendar,
-  Play
+  Play,
+  CheckCircle
 } from 'lucide-react';
 
 const StudentDashboard = () => {
@@ -22,6 +25,7 @@ const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState('exams');
   const [exams, setExams] = useState([]);
   const [results, setResults] = useState([]);
+  const [completedExamIds, setCompletedExamIds] = useState(new Set());
   const [stats, setStats] = useState({
     availableExams: 0,
     completedExams: 0,
@@ -31,6 +35,14 @@ const StudentDashboard = () => {
   useEffect(() => {
     fetchExams();
     fetchResults();
+    
+    // Auto-refresh every 2 seconds
+    const interval = setInterval(() => {
+      fetchExams();
+      fetchResults();
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, [profile]);
 
   const fetchExams = async () => {
@@ -67,6 +79,10 @@ const StudentDashboard = () => {
       const formattedResults = data || [];
       setResults(formattedResults);
       
+      // Track completed exam IDs
+      const completedIds = new Set(formattedResults.map(result => result.exam_id));
+      setCompletedExamIds(completedIds);
+      
       // Calculate stats
       const completedCount = formattedResults.length;
       const averageScore = completedCount > 0 
@@ -83,12 +99,17 @@ const StudentDashboard = () => {
     }
   };
 
+  const isExamCompleted = (examId: string) => {
+    return completedExamIds.has(examId);
+  };
+
   const isExamStarted = (examStartAt: string | null) => {
     if (!examStartAt) return true; // If no start time set, exam is available
     return new Date() >= new Date(examStartAt);
   };
 
   const getExamStatus = (exam: any) => {
+    if (isExamCompleted(exam.id)) return 'completed';
     if (!exam.exam_start_at) return 'available';
     const now = new Date();
     const startTime = new Date(exam.exam_start_at);
@@ -157,7 +178,7 @@ const StudentDashboard = () => {
             <div className="space-y-4">
               {exams.map((exam: any) => {
                 const examStatus = getExamStatus(exam);
-                const canStart = examStatus === 'started' || examStatus === 'available';
+                const canStart = (examStatus === 'started' || examStatus === 'available') && !isExamCompleted(exam.id);
                 
                 return (
                   <Card key={exam.id} className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
@@ -170,6 +191,13 @@ const StudentDashboard = () => {
                         </div>
                         
                         <div className="flex items-center gap-3">
+                          {examStatus === 'completed' && (
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Completed
+                            </div>
+                          )}
+                          
                           {examStatus === 'scheduled' && (
                             <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800 border border-yellow-200">
                               <Clock className="h-3 w-3 mr-1" />
@@ -177,14 +205,14 @@ const StudentDashboard = () => {
                             </div>
                           )}
                           
-                          {examStatus === 'started' && (
+                          {examStatus === 'started' && !isExamCompleted(exam.id) && (
                             <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
                               <Play className="h-3 w-3 mr-1" />
                               Started
                             </div>
                           )}
                           
-                          {examStatus === 'available' && (
+                          {examStatus === 'available' && !isExamCompleted(exam.id) && (
                             <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800 border border-blue-200">
                               <FileText className="h-3 w-3 mr-1" />
                               Available
@@ -193,6 +221,11 @@ const StudentDashboard = () => {
                           
                           {canStart ? (
                             <TakeExamDialog exam={exam} onExamCompleted={fetchResults} />
+                          ) : examStatus === 'completed' ? (
+                            <Button size="sm" disabled variant="outline">
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Completed
+                            </Button>
                           ) : (
                             <Button size="sm" disabled variant="outline">
                               <Clock className="h-4 w-4 mr-2" />
@@ -341,6 +374,7 @@ const StudentDashboard = () => {
       <div className="min-h-screen flex w-full">
         <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <SidebarInset>
+          <ConnectionStatus />
           <main className="flex-1 p-6">
             {renderContent()}
           </main>

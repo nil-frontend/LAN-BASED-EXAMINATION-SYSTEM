@@ -2,98 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AdminSidebar from './AdminSidebar';
 import CreateExamDialog from './CreateExamDialog';
-import PasswordUpdateDialog from './PasswordUpdateDialog';
 import EditExamDialog from './EditExamDialog';
 import MockTestDialog from './MockTestDialog';
+import PasswordUpdateDialog from './PasswordUpdateDialog';
+import ConnectionStatus from './ConnectionStatus';
 import { 
-  FileText,
-  Users,
-  BarChart3,
-  Trophy,
-  Medal,
-  Award,
+  Users, 
+  FileText, 
+  TrendingUp, 
+  Eye,
+  Edit,
+  Trash2,
+  Play,
+  Calendar,
   Clock,
-  Calendar
+  Award
 } from 'lucide-react';
-
-interface ExamResult {
-  id: string;
-  student_name: string;
-  exam_title: string;
-  score: number;
-  total_marks: number;
-  percentage: number;
-}
 
 const AdminDashboard = () => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState({
-    totalExams: 0,
-    totalStudents: 0,
-    totalResults: 0
-  });
-  const [topResults, setTopResults] = useState<ExamResult[]>([]);
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [exams, setExams] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [examResults, setExamResults] = useState([]);
 
   useEffect(() => {
-    fetchStats();
-    fetchTopResults();
     fetchExams();
+    fetchStudents();
+    fetchExamResults();
   }, []);
-
-  const fetchStats = async () => {
-    try {
-      const [examsResult, studentsResult, resultsResult] = await Promise.all([
-        supabase.from('exams').select('id', { count: 'exact' }),
-        supabase.from('profiles').select('id', { count: 'exact' }).eq('is_student', true),
-        supabase.from('exam_results').select('id', { count: 'exact' })
-      ]);
-
-      setStats({
-        totalExams: examsResult.count || 0,
-        totalStudents: studentsResult.count || 0,
-        totalResults: resultsResult.count || 0
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
-
-  const fetchTopResults = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('exam_results')
-        .select(`
-          id,
-          score,
-          total_marks,
-          percentage,
-          profiles!exam_results_student_id_fkey(full_name),
-          exams!exam_results_exam_id_fkey(title)
-        `)
-        .order('percentage', { ascending: false })
-        .limit(3);
-
-      if (error) throw error;
-
-      const formattedResults = data?.map(result => ({
-        id: result.id,
-        student_name: result.profiles?.full_name || 'Unknown',
-        exam_title: result.exams?.title || 'Unknown',
-        score: result.score,
-        total_marks: result.total_marks,
-        percentage: result.percentage
-      })) || [];
-
-      setTopResults(formattedResults);
-    } catch (error) {
-      console.error('Error fetching top results:', error);
-    }
-  };
 
   const fetchExams = async () => {
     try {
@@ -106,6 +47,42 @@ const AdminDashboard = () => {
       setExams(data || []);
     } catch (error) {
       console.error('Error fetching exams:', error);
+    }
+  };
+
+  const fetchStudents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('is_student', true);
+
+      if (error) throw error;
+      setStudents(data || []);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    }
+  };
+
+  const fetchExamResults = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exam_results')
+        .select('*');
+
+      if (error) throw error;
+      setExamResults(data || []);
+    } catch (error) {
+      console.error('Error fetching exam results:', error);
+    }
+  };
+
+  const deleteExam = async (examId: string) => {
+    try {
+      await supabase.from('exams').delete().eq('id', examId);
+      fetchExams();
+    } catch (error) {
+      console.error('Error deleting exam:', error);
     }
   };
 
@@ -123,7 +100,7 @@ const AdminDashboard = () => {
     return 'scheduled';
   };
 
-  const renderOverview = () => (
+  const renderDashboard = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
@@ -132,7 +109,7 @@ const AdminDashboard = () => {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalExams}</div>
+            <div className="text-2xl font-bold">{exams.length}</div>
             <p className="text-xs text-muted-foreground">
               Active examinations
             </p>
@@ -144,7 +121,7 @@ const AdminDashboard = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalStudents}</div>
+            <div className="text-2xl font-bold">{students.length}</div>
             <p className="text-xs text-muted-foreground">
               Registered students
             </p>
@@ -153,10 +130,10 @@ const AdminDashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Results</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalResults}</div>
+            <div className="text-2xl font-bold">{examResults.length}</div>
             <p className="text-xs text-muted-foreground">
               Completed attempts
             </p>
@@ -174,18 +151,6 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
     </div>
-  );
-
-  const renderCreateExam = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create New Exam</CardTitle>
-        <CardDescription>Set up a new examination with questions</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <CreateExamDialog />
-      </CardContent>
-    </Card>
   );
 
   const renderExams = () => (
@@ -265,6 +230,68 @@ const AdminDashboard = () => {
     </Card>
   );
 
+  const renderStudents = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Manage Students</CardTitle>
+        <CardDescription>View and manage your students</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {students.length > 0 ? (
+          <div className="space-y-4">
+            {students.map((student: any) => (
+              <Card key={student.id} className="border-l-4 border-l-primary">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl mb-1">{student.full_name}</CardTitle>
+                      <p className="text-sm text-muted-foreground mb-2">{student.email}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => deleteExam(student.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <Eye className="h-5 w-5 mx-auto mb-1 text-blue-600" />
+                      <div className="text-sm font-medium">{student.profile_picture}</div>
+                      <div className="text-xs text-muted-foreground">Profile Picture</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <Edit className="h-5 w-5 mx-auto mb-1 text-green-600" />
+                      <div className="text-sm font-medium">{student.phone_number}</div>
+                      <div className="text-xs text-muted-foreground">Phone Number</div>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <Play className="h-5 w-5 mx-auto mb-1 text-purple-600" />
+                      <div className="text-sm font-medium">{student.gender}</div>
+                      <div className="text-xs text-muted-foreground">Gender</div>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 rounded-lg">
+                      <FileText className="h-5 w-5 mx-auto mb-1 text-orange-600" />
+                      <div className="text-sm font-medium">{student.dob}</div>
+                      <div className="text-xs text-muted-foreground">Date of Birth</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No students yet</h3>
+            <p className="text-gray-600">Students will appear here once they register</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   const renderResults = () => (
     <div className="space-y-6">
       <Card>
@@ -273,9 +300,9 @@ const AdminDashboard = () => {
           <CardDescription>Highest scoring students across all exams</CardDescription>
         </CardHeader>
         <CardContent>
-          {topResults.length > 0 ? (
+          {examResults.length > 0 ? (
             <div className="space-y-4">
-              {topResults.map((result, index) => {
+              {examResults.map((result, index) => {
                 const icons = [Trophy, Medal, Award];
                 const colors = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
                 const Icon = icons[index];
@@ -344,18 +371,18 @@ const AdminDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'overview':
-        return renderOverview();
-      case 'create-exam':
-        return renderCreateExam();
+      case 'dashboard':
+        return renderDashboard();
       case 'exams':
         return renderExams();
+      case 'students':
+        return renderStudents();
       case 'results':
         return renderResults();
       case 'profile':
         return renderProfile();
       default:
-        return renderOverview();
+        return renderDashboard();
     }
   };
 
@@ -364,6 +391,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen flex w-full">
         <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <SidebarInset>
+          <ConnectionStatus />
           <main className="flex-1 p-6">
             {renderContent()}
           </main>
