@@ -34,11 +34,12 @@ const CreateExamDialog = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const [examForm, setExamForm] = useState({
+  const [examData, setExamData] = useState({
     title: '',
     exam_name: '',
     description: '',
     duration_minutes: 60,
+    exam_start_at: '',
     total_marks: 0
   });
 
@@ -93,10 +94,11 @@ const CreateExamDialog = () => {
       const { data: createdExam, error: examError } = await supabase
         .from('exams')
         .insert({
-          title: examForm.title,
-          exam_name: examForm.exam_name,
-          description: examForm.description,
-          duration_minutes: examForm.duration_minutes,
+          title: examData.title,
+          exam_name: examData.exam_name,
+          description: examData.description,
+          duration_minutes: examData.duration_minutes,
+          exam_start_at: examData.exam_start_at || null,
           total_marks: totalMarks,
           created_by: profile?.id
         })
@@ -123,11 +125,12 @@ const CreateExamDialog = () => {
       });
 
       // Reset form
-      setExamForm({
+      setExamData({
         title: '',
         exam_name: '',
         description: '',
         duration_minutes: 60,
+        exam_start_at: '',
         total_marks: 0
       });
       setQuestions([{
@@ -175,8 +178,8 @@ const CreateExamDialog = () => {
               <Label htmlFor="title">Exam Title</Label>
               <Input
                 id="title"
-                value={examForm.title}
-                onChange={(e) => setExamForm({...examForm, title: e.target.value})}
+                value={examData.title}
+                onChange={(e) => setExamData({...examData, title: e.target.value})}
                 required
               />
             </div>
@@ -184,30 +187,41 @@ const CreateExamDialog = () => {
               <Label htmlFor="exam_name">Exam Name</Label>
               <Input
                 id="exam_name"
-                value={examForm.exam_name}
-                onChange={(e) => setExamForm({...examForm, exam_name: e.target.value})}
+                value={examData.exam_name}
+                onChange={(e) => setExamData({...examData, exam_name: e.target.value})}
                 required
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="duration">Duration (minutes)</Label>
-            <Input
-              id="duration"
-              type="number"
-              value={examForm.duration_minutes}
-              onChange={(e) => setExamForm({...examForm, duration_minutes: parseInt(e.target.value)})}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Input
+                id="duration"
+                type="number"
+                value={examData.duration_minutes}
+                onChange={(e) => setExamData({...examData, duration_minutes: parseInt(e.target.value)})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam_start_at">Exam Start Time</Label>
+              <Input
+                id="exam_start_at"
+                type="datetime-local"
+                value={examData.exam_start_at}
+                onChange={(e) => setExamData({...examData, exam_start_at: e.target.value})}
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={examForm.description}
-              onChange={(e) => setExamForm({...examForm, description: e.target.value})}
+              value={examData.description}
+              onChange={(e) => setExamData({...examData, description: e.target.value})}
             />
           </div>
 

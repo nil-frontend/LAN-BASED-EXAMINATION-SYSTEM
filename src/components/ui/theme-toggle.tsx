@@ -2,7 +2,7 @@
 import React from 'react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
-import { sun, moon } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
@@ -16,12 +16,12 @@ const ThemeToggle = () => {
     >
       {theme === 'dark' ? (
         <>
-          <sun className="h-4 w-4 mr-2" />
+          <Sun className="h-4 w-4 mr-2" />
           Light Mode
         </>
       ) : (
         <>
-          <moon className="h-4 w-4 mr-2" />
+          <Moon className="h-4 w-4 mr-2" />
           Dark Mode
         </>
       )}

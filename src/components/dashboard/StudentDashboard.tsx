@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import StudentSidebar from './StudentSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
@@ -11,7 +11,9 @@ import {
   Award, 
   User,
   FileText,
-  TrendingUp
+  TrendingUp,
+  Calendar,
+  Play
 } from 'lucide-react';
 
 const StudentDashboard = () => {
@@ -80,6 +82,24 @@ const StudentDashboard = () => {
     }
   };
 
+  const isExamStarted = (examStartAt: string | null) => {
+    if (!examStartAt) return true; // If no start time set, exam is available
+    return new Date() >= new Date(examStartAt);
+  };
+
+  const getExamStatus = (exam: any) => {
+    if (!exam.exam_start_at) return 'available';
+    const now = new Date();
+    const startTime = new Date(exam.exam_start_at);
+    
+    if (now >= startTime) return 'started';
+    return 'scheduled';
+  };
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
   const renderExams = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -126,24 +146,74 @@ const StudentDashboard = () => {
       <Card>
         <CardHeader>
           <CardTitle>Available Exams</CardTitle>
-          <CardDescription>Exams you can take</CardDescription>
+          <CardDescription>Exams you can participate in</CardDescription>
         </CardHeader>
         <CardContent>
           {exams.length > 0 ? (
             <div className="space-y-4">
-              {exams.map((exam: any) => (
-                <div key={exam.id} className="border rounded-lg p-4">
-                  <h3 className="font-semibold">{exam.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{exam.description}</p>
-                  <div className="flex gap-4 text-sm">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {exam.duration_minutes} mins
-                    </span>
-                    <span>Total Marks: {exam.total_marks}</span>
+              {exams.map((exam: any) => {
+                const examStatus = getExamStatus(exam);
+                const canStart = examStatus === 'started' || examStatus === 'available';
+                
+                return (
+                  <div key={exam.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{exam.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">{exam.description}</p>
+                        <div className="flex gap-4 text-sm mb-3">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {exam.duration_minutes} mins
+                          </span>
+                          <span>Total Marks: {exam.total_marks}</span>
+                          {exam.exam_start_at && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              {formatDateTime(exam.exam_start_at)}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {examStatus === 'scheduled' && (
+                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Scheduled for {formatDateTime(exam.exam_start_at)}
+                          </div>
+                        )}
+                        
+                        {examStatus === 'started' && (
+                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                            <Play className="h-3 w-3 mr-1" />
+                            Exam Started
+                          </div>
+                        )}
+                        
+                        {examStatus === 'available' && (
+                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                            <FileText className="h-3 w-3 mr-1" />
+                            Available Now
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="ml-4">
+                        {canStart ? (
+                          <Button size="sm">
+                            <Play className="h-4 w-4 mr-2" />
+                            Start Exam
+                          </Button>
+                        ) : (
+                          <Button size="sm" disabled>
+                            <Clock className="h-4 w-4 mr-2" />
+                            Scheduled
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
