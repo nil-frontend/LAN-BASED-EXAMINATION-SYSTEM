@@ -1,160 +1,258 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import StudentSidebar from './StudentSidebar';
+import PasswordUpdateDialog from './PasswordUpdateDialog';
 import { 
-  BookOpen, 
   Clock, 
   Award, 
-  User, 
-  LogOut,
+  User,
   FileText,
   TrendingUp
 } from 'lucide-react';
 
 const StudentDashboard = () => {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('exams');
+  const [exams, setExams] = useState([]);
+  const [results, setResults] = useState([]);
+  const [stats, setStats] = useState({
+    availableExams: 0,
+    completedExams: 0,
+    averageScore: 0
+  });
 
-  const handleLogout = async () => {
-    await signOut();
+  useEffect(() => {
+    fetchExams();
+    fetchResults();
+  }, [profile]);
+
+  const fetchExams = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exams')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setExams(data || []);
+      setStats(prev => ({ ...prev, availableExams: data?.length || 0 }));
+    } catch (error) {
+      console.error('Error fetching exams:', error);
+    }
+  };
+
+  const fetchResults = async () => {
+    if (!profile?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('exam_results')
+        .select(`
+          *,
+          exams!exam_results_exam_id_fkey(title)
+        `)
+        .eq('student_id', profile.id)
+        .order('completed_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const formattedResults = data || [];
+      setResults(formattedResults);
+      
+      // Calculate stats
+      const completedCount = formattedResults.length;
+      const averageScore = completedCount > 0 
+        ? formattedResults.reduce((sum, result) => sum + result.percentage, 0) / completedCount 
+        : 0;
+
+      setStats(prev => ({
+        ...prev,
+        completedExams: completedCount,
+        averageScore: Math.round(averageScore * 10) / 10
+      }));
+    } catch (error) {
+      console.error('Error fetching results:', error);
+    }
+  };
+
+  const renderExams = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Available Exams</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.availableExams}</div>
+            <p className="text-xs text-muted-foreground">
+              Ready to take
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.completedExams}</div>
+            <p className="text-xs text-muted-foreground">
+              Exams taken
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.averageScore > 0 ? `${stats.averageScore}%` : '-'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Overall performance
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Available Exams</CardTitle>
+          <CardDescription>Exams you can take</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {exams.length > 0 ? (
+            <div className="space-y-4">
+              {exams.map((exam: any) => (
+                <div key={exam.id} className="border rounded-lg p-4">
+                  <h3 className="font-semibold">{exam.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">{exam.description}</p>
+                  <div className="flex gap-4 text-sm">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {exam.duration_minutes} mins
+                    </span>
+                    <span>Total Marks: {exam.total_marks}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No exams available</h3>
+              <p className="text-gray-600">Check back later for new exams</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderResults = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>My Exam Results</CardTitle>
+        <CardDescription>Your performance history</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {results.length > 0 ? (
+          <div className="space-y-4">
+            {results.map((result: any) => (
+              <div key={result.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold">{result.exams?.title}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Completed on {new Date(result.completed_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold">{result.percentage.toFixed(1)}%</div>
+                    <div className="text-sm text-muted-foreground">
+                      {result.score}/{result.total_marks}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No results yet</h3>
+            <p className="text-gray-600">Take an exam to see your results here</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const renderProfile = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Profile Information</CardTitle>
+        <CardDescription>Your account details</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <label className="text-sm font-medium text-gray-700">Full Name</label>
+          <p className="text-gray-900">{profile?.full_name}</p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Email</label>
+          <p className="text-gray-900">{profile?.email}</p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Role</label>
+          <p className="text-gray-900 flex items-center">
+            <User className="h-4 w-4 mr-2" />
+            Student
+          </p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Account Status</label>
+          <p className="text-green-600">Active</p>
+        </div>
+        <div className="pt-4">
+          <PasswordUpdateDialog />
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'exams':
+        return renderExams();
+      case 'results':
+        return renderResults();
+      case 'profile':
+        return renderProfile();
+      default:
+        return renderExams();
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-xl font-semibold text-gray-900">Exam Nexus - Student</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {profile?.full_name}</span>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="exams">Available Exams</TabsTrigger>
-            <TabsTrigger value="results">My Results</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="exams" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Available Exams</CardTitle>
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">
-                    No exams available
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                  <Award className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">
-                    Exams completed
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">-</div>
-                  <p className="text-xs text-muted-foreground">
-                    No results yet
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming Exams</CardTitle>
-                <CardDescription>Exams available for you to take</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No exams available</h3>
-                  <p className="text-gray-600">Check back later for new exams</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="results">
-            <Card>
-              <CardHeader>
-                <CardTitle>My Exam Results</CardTitle>
-                <CardDescription>Your performance history</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No results yet</h3>
-                  <p className="text-gray-600">Take an exam to see your results here</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Your account details</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Full Name</label>
-                  <p className="text-gray-900">{profile?.full_name}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Email</label>
-                  <p className="text-gray-900">{profile?.email}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Role</label>
-                  <p className="text-gray-900 flex items-center">
-                    <User className="h-4 w-4 mr-2" />
-                    Student
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Account Status</label>
-                  <p className="text-green-600">Active</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <SidebarInset>
+          <main className="flex-1 p-6">
+            {renderContent()}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 

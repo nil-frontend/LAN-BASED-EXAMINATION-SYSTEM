@@ -11,6 +11,7 @@ import { BookOpen, UserCheck, GraduationCap } from 'lucide-react';
 
 const AuthPage = () => {
   const { signIn, signUp, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState('login');
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [signupForm, setSignupForm] = useState({ 
     email: '', 
@@ -26,7 +27,14 @@ const AuthPage = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signUp(signupForm.email, signupForm.password, signupForm.fullName, signupForm.isAdmin);
+    const result = await signUp(signupForm.email, signupForm.password, signupForm.fullName, signupForm.isAdmin);
+    
+    if (!result.error) {
+      // Reset form and switch to login tab after successful signup
+      setSignupForm({ email: '', password: '', fullName: '', isAdmin: false });
+      setActiveTab('login');
+      setLoginForm({ email: signupForm.email, password: '' });
+    }
   };
 
   return (
@@ -40,7 +48,7 @@ const AuthPage = () => {
           <p className="text-gray-600 mt-2">Online Examination System</p>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
