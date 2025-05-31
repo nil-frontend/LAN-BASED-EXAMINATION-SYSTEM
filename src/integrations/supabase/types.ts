@@ -101,6 +101,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           duration_minutes: number
+          exam_name: string | null
           id: string
           is_active: boolean | null
           title: string
@@ -112,6 +113,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration_minutes?: number
+          exam_name?: string | null
           id?: string
           is_active?: boolean | null
           title: string
@@ -123,6 +125,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration_minutes?: number
+          exam_name?: string | null
           id?: string
           is_active?: boolean | null
           title?: string

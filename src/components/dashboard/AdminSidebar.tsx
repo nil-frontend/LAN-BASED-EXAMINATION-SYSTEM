@@ -15,6 +15,7 @@ import {
   SidebarTrigger
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import ThemeToggle from '@/components/ui/theme-toggle';
 import { 
   BookOpen, 
   BarChart3, 
@@ -101,6 +102,7 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
       <SidebarFooter className="border-t p-4">
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">Welcome, {profile?.full_name}</p>
+          <ThemeToggle />
           <Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
             <LogOut className="h-4 w-4 mr-2" />
             Logout

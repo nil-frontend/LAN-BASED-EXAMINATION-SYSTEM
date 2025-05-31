@@ -11,15 +11,17 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import ThemeToggle from '@/components/ui/theme-toggle';
 import { 
   BookOpen, 
+  BarChart3, 
   FileText, 
-  Award, 
   Settings, 
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react';
 
 interface StudentSidebarProps {
@@ -36,13 +38,18 @@ const StudentSidebar = ({ activeTab, setActiveTab }: StudentSidebarProps) => {
 
   const menuItems = [
     {
-      title: "Available Exams",
+      title: "Dashboard",
+      icon: BarChart3,
+      id: "dashboard"
+    },
+    {
+      title: "Take Exam",
       icon: FileText,
       id: "exams"
     },
     {
       title: "My Results",
-      icon: Award,
+      icon: Users,
       id: "results"
     },
     {
@@ -88,6 +95,7 @@ const StudentSidebar = ({ activeTab, setActiveTab }: StudentSidebarProps) => {
       <SidebarFooter className="border-t p-4">
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">Welcome, {profile?.full_name}</p>
+          <ThemeToggle />
           <Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
             <LogOut className="h-4 w-4 mr-2" />
             Logout

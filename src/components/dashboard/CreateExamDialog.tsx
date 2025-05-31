@@ -36,6 +36,7 @@ const CreateExamDialog = () => {
   
   const [examForm, setExamForm] = useState({
     title: '',
+    exam_name: '',
     description: '',
     duration_minutes: 60,
     total_marks: 0
@@ -93,6 +94,7 @@ const CreateExamDialog = () => {
         .from('exams')
         .insert({
           title: examForm.title,
+          exam_name: examForm.exam_name,
           description: examForm.description,
           duration_minutes: examForm.duration_minutes,
           total_marks: totalMarks,
@@ -123,6 +125,7 @@ const CreateExamDialog = () => {
       // Reset form
       setExamForm({
         title: '',
+        exam_name: '',
         description: '',
         duration_minutes: 60,
         total_marks: 0
@@ -178,15 +181,25 @@ const CreateExamDialog = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Label htmlFor="exam_name">Exam Name</Label>
               <Input
-                id="duration"
-                type="number"
-                value={examForm.duration_minutes}
-                onChange={(e) => setExamForm({...examForm, duration_minutes: parseInt(e.target.value)})}
+                id="exam_name"
+                value={examForm.exam_name}
+                onChange={(e) => setExamForm({...examForm, exam_name: e.target.value})}
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="duration">Duration (minutes)</Label>
+            <Input
+              id="duration"
+              type="number"
+              value={examForm.duration_minutes}
+              onChange={(e) => setExamForm({...examForm, duration_minutes: parseInt(e.target.value)})}
+              required
+            />
           </div>
           
           <div className="space-y-2">
@@ -201,10 +214,6 @@ const CreateExamDialog = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Questions (Total Marks: {calculateTotalMarks()})</h3>
-              <Button type="button" onClick={addQuestion} variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Question
-              </Button>
             </div>
 
             {questions.map((question, index) => (
@@ -294,6 +303,13 @@ const CreateExamDialog = () => {
                 </div>
               </div>
             ))}
+
+            <div className="flex justify-center">
+              <Button type="button" onClick={addQuestion} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Question
+              </Button>
+            </div>
           </div>
 
           <DialogFooter>
