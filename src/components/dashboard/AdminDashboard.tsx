@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +21,10 @@ import {
   Play,
   Calendar,
   Clock,
-  Award
+  Award,
+  BarChart3,
+  Trophy,
+  Medal
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -103,37 +107,37 @@ const AdminDashboard = () => {
   const renderDashboard = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Exams</CardTitle>
+            <CardTitle className="text-sm font-medium text-card-foreground">Total Exams</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{exams.length}</div>
+            <div className="text-2xl font-bold text-card-foreground">{exams.length}</div>
             <p className="text-xs text-muted-foreground">
               Active examinations
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium text-card-foreground">Total Students</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{students.length}</div>
+            <div className="text-2xl font-bold text-card-foreground">{students.length}</div>
             <p className="text-xs text-muted-foreground">
               Registered students
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Results</CardTitle>
+            <CardTitle className="text-sm font-medium text-card-foreground">Total Results</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{examResults.length}</div>
+            <div className="text-2xl font-bold text-card-foreground">{examResults.length}</div>
             <p className="text-xs text-muted-foreground">
               Completed attempts
             </p>
@@ -141,9 +145,9 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      <Card>
+      <Card className="bg-card">
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle className="text-card-foreground">Quick Actions</CardTitle>
           <CardDescription>Get started with these common tasks</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-4">
@@ -154,9 +158,9 @@ const AdminDashboard = () => {
   );
 
   const renderExams = () => (
-    <Card>
+    <Card className="bg-card">
       <CardHeader>
-        <CardTitle>Manage Exams</CardTitle>
+        <CardTitle className="text-card-foreground">Manage Exams</CardTitle>
         <CardDescription>View and manage your examinations</CardDescription>
       </CardHeader>
       <CardContent>
@@ -165,11 +169,11 @@ const AdminDashboard = () => {
             {exams.map((exam: any) => {
               const status = getExamStatus(exam);
               return (
-                <Card key={exam.id} className="border-l-4 border-l-primary">
+                <Card key={exam.id} className="border-l-4 border-l-primary bg-card">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <CardTitle className="text-xl mb-1">{exam.title}</CardTitle>
+                        <CardTitle className="text-xl mb-1 text-card-foreground">{exam.title}</CardTitle>
                         <p className="text-sm text-muted-foreground mb-2">{exam.exam_name}</p>
                         <p className="text-sm text-muted-foreground">{exam.description}</p>
                       </div>
@@ -181,33 +185,33 @@ const AdminDashboard = () => {
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <Clock className="h-5 w-5 mx-auto mb-1 text-blue-600" />
-                        <div className="text-sm font-medium">{exam.duration_minutes} mins</div>
+                      <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <Clock className="h-5 w-5 mx-auto mb-1 text-blue-600 dark:text-blue-400" />
+                        <div className="text-sm font-medium text-card-foreground">{exam.duration_minutes} mins</div>
                         <div className="text-xs text-muted-foreground">Duration</div>
                       </div>
-                      <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <Award className="h-5 w-5 mx-auto mb-1 text-green-600" />
-                        <div className="text-sm font-medium">{exam.total_marks}</div>
+                      <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <Award className="h-5 w-5 mx-auto mb-1 text-green-600 dark:text-green-400" />
+                        <div className="text-sm font-medium text-card-foreground">{exam.total_marks}</div>
                         <div className="text-xs text-muted-foreground">Total Marks</div>
                       </div>
-                      <div className="text-center p-3 bg-purple-50 rounded-lg">
-                        <BarChart3 className="h-5 w-5 mx-auto mb-1 text-purple-600" />
-                        <div className="text-sm font-medium">{status === 'started' ? 'Active' : status === 'scheduled' ? 'Scheduled' : 'Available'}</div>
+                      <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                        <BarChart3 className="h-5 w-5 mx-auto mb-1 text-purple-600 dark:text-purple-400" />
+                        <div className="text-sm font-medium text-card-foreground">{status === 'started' ? 'Active' : status === 'scheduled' ? 'Scheduled' : 'Available'}</div>
                         <div className="text-xs text-muted-foreground">Status</div>
                       </div>
-                      <div className="text-center p-3 bg-orange-50 rounded-lg">
-                        <FileText className="h-5 w-5 mx-auto mb-1 text-orange-600" />
-                        <div className="text-sm font-medium">{exam.is_active ? 'Active' : 'Inactive'}</div>
+                      <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <FileText className="h-5 w-5 mx-auto mb-1 text-orange-600 dark:text-orange-400" />
+                        <div className="text-sm font-medium text-card-foreground">{exam.is_active ? 'Active' : 'Inactive'}</div>
                         <div className="text-xs text-muted-foreground">Visibility</div>
                       </div>
                     </div>
                     
                     {exam.exam_start_at && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-yellow-600" />
-                          <span className="text-sm font-medium text-yellow-800">
+                          <Calendar className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                          <span className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
                             Scheduled for: {formatDateTime(exam.exam_start_at)}
                           </span>
                         </div>
@@ -220,9 +224,9 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No exams yet</h3>
-            <p className="text-gray-600 mb-6">Create your first exam to get started</p>
+            <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-card-foreground mb-2">No exams yet</h3>
+            <p className="text-muted-foreground mb-6">Create your first exam to get started</p>
             <CreateExamDialog />
           </div>
         )}

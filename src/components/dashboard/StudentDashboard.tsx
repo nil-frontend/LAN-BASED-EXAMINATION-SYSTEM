@@ -125,9 +125,9 @@ const StudentDashboard = () => {
   const renderExams = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-blue-500 bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Exams</CardTitle>
+            <CardTitle className="text-sm font-medium text-card-foreground">Available Exams</CardTitle>
             <FileText className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -137,9 +137,9 @@ const StudentDashboard = () => {
             </p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="border-l-4 border-l-green-500 bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium text-card-foreground">Completed</CardTitle>
             <Award className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -149,9 +149,9 @@ const StudentDashboard = () => {
             </p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="border-l-4 border-l-purple-500 bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+            <CardTitle className="text-sm font-medium text-card-foreground">Average Score</CardTitle>
             <TrendingUp className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -165,9 +165,9 @@ const StudentDashboard = () => {
         </Card>
       </div>
 
-      <Card>
+      <Card className="bg-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-card-foreground">
             <FileText className="h-5 w-5" />
             Available Exams
           </CardTitle>
@@ -181,39 +181,39 @@ const StudentDashboard = () => {
                 const canStart = (examStatus === 'started' || examStatus === 'available') && !isExamCompleted(exam.id);
                 
                 return (
-                  <Card key={exam.id} className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
+                  <Card key={exam.id} className="border-l-4 border-l-primary hover:shadow-md transition-shadow bg-card">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <CardTitle className="text-lg mb-1">{exam.title}</CardTitle>
+                          <CardTitle className="text-lg mb-1 text-card-foreground">{exam.title}</CardTitle>
                           <p className="text-sm text-muted-foreground mb-2">{exam.exam_name}</p>
                           <p className="text-sm text-muted-foreground">{exam.description}</p>
                         </div>
                         
                         <div className="flex items-center gap-3">
                           {examStatus === 'completed' && (
-                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Completed
                             </div>
                           )}
                           
                           {examStatus === 'scheduled' && (
-                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800 border border-yellow-200">
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800">
                               <Clock className="h-3 w-3 mr-1" />
                               Scheduled
                             </div>
                           )}
                           
                           {examStatus === 'started' && !isExamCompleted(exam.id) && (
-                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
                               <Play className="h-3 w-3 mr-1" />
                               Started
                             </div>
                           )}
                           
                           {examStatus === 'available' && !isExamCompleted(exam.id) && (
-                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800 border border-blue-200">
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
                               <FileText className="h-3 w-3 mr-1" />
                               Available
                             </div>
@@ -238,19 +238,19 @@ const StudentDashboard = () => {
                     
                     <CardContent className="pt-0">
                       <div className="grid grid-cols-3 gap-4 mb-4">
-                        <div className="text-center p-3 bg-blue-50 rounded-lg">
-                          <Clock className="h-5 w-5 mx-auto mb-1 text-blue-600" />
-                          <div className="text-sm font-medium">{exam.duration_minutes} mins</div>
+                        <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <Clock className="h-5 w-5 mx-auto mb-1 text-blue-600 dark:text-blue-400" />
+                          <div className="text-sm font-medium text-card-foreground">{exam.duration_minutes} mins</div>
                           <div className="text-xs text-muted-foreground">Duration</div>
                         </div>
-                        <div className="text-center p-3 bg-green-50 rounded-lg">
-                          <Award className="h-5 w-5 mx-auto mb-1 text-green-600" />
-                          <div className="text-sm font-medium">{exam.total_marks}</div>
+                        <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <Award className="h-5 w-5 mx-auto mb-1 text-green-600 dark:text-green-400" />
+                          <div className="text-sm font-medium text-card-foreground">{exam.total_marks}</div>
                           <div className="text-xs text-muted-foreground">Total Marks</div>
                         </div>
-                        <div className="text-center p-3 bg-purple-50 rounded-lg">
-                          <Calendar className="h-5 w-5 mx-auto mb-1 text-purple-600" />
-                          <div className="text-sm font-medium">
+                        <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                          <Calendar className="h-5 w-5 mx-auto mb-1 text-purple-600 dark:text-purple-400" />
+                          <div className="text-sm font-medium text-card-foreground">
                             {exam.exam_start_at ? formatDateTime(exam.exam_start_at) : 'Anytime'}
                           </div>
                           <div className="text-xs text-muted-foreground">Start Time</div>
@@ -258,10 +258,10 @@ const StudentDashboard = () => {
                       </div>
                       
                       {exam.exam_start_at && examStatus === 'scheduled' && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-yellow-600" />
-                            <span className="text-sm font-medium text-yellow-800">
+                            <Calendar className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
                               Scheduled for: {formatDateTime(exam.exam_start_at)}
                             </span>
                           </div>
@@ -274,9 +274,9 @@ const StudentDashboard = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Clock className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No exams available</h3>
-              <p className="text-gray-600">Check back later for new exams</p>
+              <Clock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-card-foreground mb-2">No exams available</h3>
+              <p className="text-muted-foreground">Check back later for new exams</p>
             </div>
           )}
         </CardContent>
@@ -285,25 +285,25 @@ const StudentDashboard = () => {
   );
 
   const renderResults = () => (
-    <Card>
+    <Card className="bg-card">
       <CardHeader>
-        <CardTitle>My Exam Results</CardTitle>
+        <CardTitle className="text-card-foreground">My Exam Results</CardTitle>
         <CardDescription>Your performance history</CardDescription>
       </CardHeader>
       <CardContent>
         {results.length > 0 ? (
           <div className="space-y-4">
             {results.map((result: any) => (
-              <div key={result.id} className="border rounded-lg p-4">
+              <div key={result.id} className="border border-border rounded-lg p-4 bg-card">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold">{result.exams?.title}</h3>
+                    <h3 className="font-semibold text-card-foreground">{result.exams?.title}</h3>
                     <p className="text-sm text-muted-foreground">
                       Completed on {new Date(result.completed_at).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold">{result.percentage.toFixed(1)}%</div>
+                    <div className="text-lg font-bold text-card-foreground">{result.percentage.toFixed(1)}%</div>
                     <div className="text-sm text-muted-foreground">
                       {result.score}/{result.total_marks}
                     </div>
@@ -314,9 +314,9 @@ const StudentDashboard = () => {
           </div>
         ) : (
           <div className="text-center py-8">
-            <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No results yet</h3>
-            <p className="text-gray-600">Take an exam to see your results here</p>
+            <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-card-foreground mb-2">No results yet</h3>
+            <p className="text-muted-foreground">Take an exam to see your results here</p>
           </div>
         )}
       </CardContent>
@@ -324,29 +324,29 @@ const StudentDashboard = () => {
   );
 
   const renderProfile = () => (
-    <Card>
+    <Card className="bg-card">
       <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
+        <CardTitle className="text-card-foreground">Profile Information</CardTitle>
         <CardDescription>Your account details</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-gray-700">Full Name</label>
-          <p className="text-gray-900">{profile?.full_name}</p>
+          <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+          <p className="text-card-foreground">{profile?.full_name}</p>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700">Email</label>
-          <p className="text-gray-900">{profile?.email}</p>
+          <label className="text-sm font-medium text-muted-foreground">Email</label>
+          <p className="text-card-foreground">{profile?.email}</p>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700">Role</label>
-          <p className="text-gray-900 flex items-center">
+          <label className="text-sm font-medium text-muted-foreground">Role</label>
+          <p className="text-card-foreground flex items-center">
             <User className="h-4 w-4 mr-2" />
             Student
           </p>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700">Account Status</label>
+          <label className="text-sm font-medium text-muted-foreground">Account Status</label>
           <p className="text-green-600">Active</p>
         </div>
         <div className="pt-4">
