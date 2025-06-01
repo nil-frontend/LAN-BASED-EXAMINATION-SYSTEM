@@ -28,6 +28,10 @@ import {
   Mail,
   Shield
 } from 'lucide-react';
+import TopNavBar from './TopNavBar';
+import ExamDetailsDialog from './ExamDetailsDialog';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { profile } = useAuth();
@@ -35,12 +39,36 @@ const AdminDashboard = () => {
   const [exams, setExams] = useState([]);
   const [students, setStudents] = useState([]);
   const [examResults, setExamResults] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredExams, setFilteredExams] = useState([]);
+  const [selectedExam, setSelectedExam] = useState(null);
+  const [isExamDetailsOpen, setIsExamDetailsOpen] = useState(false);
+  const [topPerformers, setTopPerformers] = useState([]);
 
   useEffect(() => {
     fetchExams();
     fetchStudents();
     fetchExamResults();
   }, []);
+
+  useEffect(() => {
+    // Filter exams based on search term
+    const filtered = exams.filter(exam => 
+      exam.exam_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exam.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredExams(filtered);
+  }, [exams, searchTerm]);
+
+  useEffect(() => {
+    if (examResults.length > 0) {
+      // Get top 3 performers across all exams
+      const sortedResults = [...examResults]
+        .sort((a, b) => b.percentage - a.percentage)
+        .slice(0, 3);
+      setTopPerformers(sortedResults);
+    }
+  }, [examResults]);
 
   const fetchExams = async () => {
     try {
@@ -300,36 +328,42 @@ const AdminDashboard = () => {
 
   const renderResults = () => (
     <div className="space-y-6">
+      {/* Top 3 Performers Hero Section */}
       <Card>
         <CardHeader>
           <CardTitle>Top 3 Performers</CardTitle>
           <CardDescription>Highest scoring students across all exams</CardDescription>
         </CardHeader>
         <CardContent>
-          {examResults.length > 0 ? (
-            <div className="space-y-4">
-              {examResults.map((result, index) => {
+          {topPerformers.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {topPerformers.map((result, index) => {
                 const icons = [Trophy, Medal, Award];
                 const colors = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
+                const bgColors = ['bg-yellow-50 dark:bg-yellow-900/20', 'bg-gray-50 dark:bg-gray-900/20', 'bg-amber-50 dark:bg-amber-900/20'];
                 const Icon = icons[index];
                 
                 return (
-                  <div key={result.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                    <Icon className={`h-8 w-8 ${colors[index]}`} />
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{result.student_name}</h3>
-                      <p className="text-sm text-muted-foreground">{result.exam_title}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg">{result.percentage.toFixed(1)}%</div>
-                      <div className="text-sm text-muted-foreground">
-                        {result.score}/{result.total_marks}
+                  <Card key={result.id} className={`${bgColors[index]} border-2`}>
+                    <CardContent className="p-6 text-center">
+                      <Icon className={`h-12 w-12 ${colors[index]} mx-auto mb-3`} />
+                      <h3 className="font-bold text-lg text-card-foreground mb-1">
+                        {result.student_name || 'Unknown Student'}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {result.exam_title || 'Unknown Exam'}
+                      </p>
+                      <div className="text-2xl font-bold text-primary mb-1">
+                        {result.percentage.toFixed(1)}%
                       </div>
-                    </div>
-                    <div className="text-xl font-bold text-muted-foreground">
-                      #{index + 1}
-                    </div>
-                  </div>
+                      <div className="text-sm text-muted-foreground">
+                        {result.score}/{result.total_marks} marks
+                      </div>
+                      <div className="mt-3 text-2xl font-bold text-muted-foreground">
+                        #{index + 1}
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
@@ -342,6 +376,86 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Exams List with Search */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Exam Results by Subject</CardTitle>
+          <CardDescription>Click on any exam to view detailed student results</CardDescription>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search by subject name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredExams.length > 0 ? (
+            <div className="space-y-3">
+              {filteredExams.map((exam) => {
+                const examResultsCount = examResults.filter(result => result.exam_id === exam.id).length;
+                const avgScore = examResults
+                  .filter(result => result.exam_id === exam.id)
+                  .reduce((acc, curr, _, arr) => acc + curr.percentage / arr.length, 0);
+
+                return (
+                  <Card 
+                    key={exam.id} 
+                    className="border-l-4 border-l-primary cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => {
+                      setSelectedExam(exam);
+                      setIsExamDetailsOpen(true);
+                    }}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-card-foreground mb-1">
+                            {exam.title}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            Subject: {exam.exam_name}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-primary">
+                            {examResultsCount} students
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {examResultsCount > 0 ? `Avg: ${avgScore.toFixed(1)}%` : 'No attempts'}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {searchTerm ? 'No exams found' : 'No exams available'}
+              </h3>
+              <p className="text-gray-600">
+                {searchTerm ? 'Try adjusting your search term' : 'Create exams to see results here'}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ExamDetailsDialog
+        exam={selectedExam}
+        isOpen={isExamDetailsOpen}
+        onClose={() => {
+          setIsExamDetailsOpen(false);
+          setSelectedExam(null);
+        }}
+      />
     </div>
   );
 
@@ -423,7 +537,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen flex w-full">
         <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <SidebarInset>
-          <ConnectionStatus />
+          <TopNavBar />
           <main className="flex-1 p-6">
             {renderContent()}
           </main>

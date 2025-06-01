@@ -7,7 +7,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import StudentSidebar from './StudentSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
 import TakeExamDialog from './TakeExamDialog';
-import ConnectionStatus from './ConnectionStatus';
+import TopNavBar from './TopNavBar';
 import { 
   Clock, 
   Award, 
@@ -398,7 +398,7 @@ const StudentDashboard = () => {
       <div className="min-h-screen flex w-full">
         <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <SidebarInset>
-          <ConnectionStatus />
+          <TopNavBar />
           <main className="flex-1 p-6">
             {renderContent()}
           </main>
