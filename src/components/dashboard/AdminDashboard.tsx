@@ -9,7 +9,6 @@ import CreateExamDialog from './CreateExamDialog';
 import EditExamDialog from './EditExamDialog';
 import MockTestDialog from './MockTestDialog';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
-import ConnectionStatus from './ConnectionStatus';
 import { 
   Users, 
   FileText, 
@@ -371,7 +370,9 @@ const AdminDashboard = () => {
             <div className="text-center py-8">
               <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No results yet</h3>
-              <p className="text-gray-600">Results will appear here once students take exams</p>
+              <p className="text-gray-600">
+                {searchTerm ? 'Try adjusting your search term' : 'Create exams to see results here'}
+              </p>
             </div>
           )}
         </CardContent>
