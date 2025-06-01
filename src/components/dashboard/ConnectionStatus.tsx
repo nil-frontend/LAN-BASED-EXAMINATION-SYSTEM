@@ -35,12 +35,8 @@ const ConnectionStatus = () => {
   };
 
   return (
-    <div className="bg-background border-b border-border px-6 py-3 flex justify-between items-center">
-      <div className="text-xl font-bold text-foreground">
-        Exam Nexus
-      </div>
-      
-      <div className="flex items-center gap-6">
+    <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border px-6 py-3">
+      <div className="flex justify-end items-center gap-6">
         <div className="flex items-center gap-2">
           {isOnline ? (
             <>

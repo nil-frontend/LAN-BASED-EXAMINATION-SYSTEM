@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +16,9 @@ import {
   TrendingUp,
   Calendar,
   Play,
-  CheckCircle
+  CheckCircle,
+  Mail,
+  Shield
 } from 'lucide-react';
 
 const StudentDashboard = () => {
@@ -324,36 +325,59 @@ const StudentDashboard = () => {
   );
 
   const renderProfile = () => (
-    <Card className="bg-card">
-      <CardHeader>
-        <CardTitle className="text-card-foreground">Profile Information</CardTitle>
-        <CardDescription>Your account details</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <label className="text-sm font-medium text-muted-foreground">Full Name</label>
-          <p className="text-card-foreground">{profile?.full_name}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-muted-foreground">Email</label>
-          <p className="text-card-foreground">{profile?.email}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-muted-foreground">Role</label>
-          <p className="text-card-foreground flex items-center">
-            <User className="h-4 w-4 mr-2" />
-            Student
-          </p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-muted-foreground">Account Status</label>
-          <p className="text-green-600">Active</p>
-        </div>
-        <div className="pt-4">
-          <PasswordUpdateDialog />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card className="bg-card">
+        <CardHeader>
+          <CardTitle className="text-card-foreground">Profile Information</CardTitle>
+          <CardDescription>Your account details</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Full Name</label>
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-primary" />
+                    <p className="text-card-foreground font-medium">{profile?.full_name}</p>
+                  </div>
+                </div>
+                
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Email Address</label>
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-primary" />
+                    <p className="text-card-foreground font-medium">{profile?.email}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Role</label>
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <p className="text-card-foreground font-medium">Student</p>
+                  </div>
+                </div>
+                
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Account Status</label>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <p className="text-green-500 font-medium">Active</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-border">
+              <PasswordUpdateDialog />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderContent = () => {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,7 +23,10 @@ import {
   Award,
   BarChart3,
   Trophy,
-  Medal
+  Medal,
+  User,
+  Mail,
+  Shield
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -344,33 +346,59 @@ const AdminDashboard = () => {
   );
 
   const renderProfile = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>Profile Settings</CardTitle>
-        <CardDescription>Manage your account information</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <label className="text-sm font-medium text-gray-700">Full Name</label>
-          <p className="text-gray-900">{profile?.full_name}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">Email</label>
-          <p className="text-gray-900">{profile?.email}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">Role</label>
-          <p className="text-gray-900">Administrator</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">Status</label>
-          <p className="text-green-600">Approved</p>
-        </div>
-        <div className="pt-4">
-          <PasswordUpdateDialog />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card className="bg-card">
+        <CardHeader>
+          <CardTitle className="text-card-foreground">Profile Settings</CardTitle>
+          <CardDescription>Manage your account information</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Full Name</label>
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-primary" />
+                    <p className="text-card-foreground font-medium">{profile?.full_name}</p>
+                  </div>
+                </div>
+                
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Email Address</label>
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-primary" />
+                    <p className="text-card-foreground font-medium">{profile?.email}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Role</label>
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <p className="text-card-foreground font-medium">Administrator</p>
+                  </div>
+                </div>
+                
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Status</label>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <p className="text-green-500 font-medium">Approved</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-border">
+              <PasswordUpdateDialog />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderContent = () => {
