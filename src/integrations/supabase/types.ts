@@ -101,6 +101,8 @@ export type Database = {
           created_by: string | null
           description: string | null
           duration_minutes: number
+          exam_end_at: string | null
+          exam_entry_block_at: string | null
           exam_name: string | null
           exam_start_at: string | null
           id: string
@@ -114,6 +116,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration_minutes?: number
+          exam_end_at?: string | null
+          exam_entry_block_at?: string | null
           exam_name?: string | null
           exam_start_at?: string | null
           id?: string
@@ -127,6 +131,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration_minutes?: number
+          exam_end_at?: string | null
+          exam_entry_block_at?: string | null
           exam_name?: string | null
           exam_start_at?: string | null
           id?: string

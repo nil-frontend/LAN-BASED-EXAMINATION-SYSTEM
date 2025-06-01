@@ -42,10 +42,12 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
   const [isTestCompleted, setIsTestCompleted] = useState(false);
   const [examResultId, setExamResultId] = useState<string | null>(null);
   const [hasAlreadyTaken, setHasAlreadyTaken] = useState(false);
+  const [isEntryBlocked, setIsEntryBlocked] = useState(false);
 
   useEffect(() => {
     if (exam && open && !isTestStarted) {
       checkIfAlreadyTaken();
+      checkEntryBlockTime();
       fetchQuestions();
     }
   }, [exam, open, isTestStarted]);
@@ -61,6 +63,17 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
     }
     return () => clearTimeout(timer);
   }, [timeLeft, isTestStarted, isTestCompleted]);
+
+  // Check if exam entry is blocked based on exam_entry_block_at
+  const checkEntryBlockTime = () => {
+    if (exam.exam_entry_block_at) {
+      const blockTime = new Date(exam.exam_entry_block_at);
+      const currentTime = new Date();
+      setIsEntryBlocked(currentTime > blockTime);
+    } else {
+      setIsEntryBlocked(false);
+    }
+  };
 
   const checkIfAlreadyTaken = async () => {
     if (!profile?.id) return;
@@ -232,6 +245,38 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
             </div>
             <div className="text-sm text-muted-foreground">
               You can view your results in the "My Results" section
+            </div>
+            <Button onClick={() => setOpen(false)} className="w-full">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (isEntryBlocked) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button size="sm" disabled variant="outline" className="opacity-50">
+            <Play className="h-4 w-4 mr-2" />
+            Entry Blocked
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Exam Entry Blocked</DialogTitle>
+            <DialogDescription>
+              Entry time for this exam has expired
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-center">
+            <div className="text-lg text-red-600 font-medium">
+              You can no longer enter this exam
+            </div>
+            <div className="text-sm text-muted-foreground">
+              The entry time for this exam has passed. Contact your administrator if you believe this is an error.
             </div>
             <Button onClick={() => setOpen(false)} className="w-full">
               Close
