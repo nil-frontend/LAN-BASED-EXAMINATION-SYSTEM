@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +64,32 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
     }
     return () => clearTimeout(timer);
   }, [timeLeft, isTestStarted, isTestCompleted]);
+
+  // Effect to handle exam end time auto-submit
+  useEffect(() => {
+    let examEndTimer: NodeJS.Timeout;
+    
+    if (isTestStarted && !isTestCompleted && exam.exam_end_at) {
+      const examEndTime = new Date(exam.exam_end_at).getTime();
+      const currentTime = new Date().getTime();
+      const timeUntilEnd = examEndTime - currentTime;
+      
+      if (timeUntilEnd > 0) {
+        examEndTimer = setTimeout(() => {
+          completeTest();
+        }, timeUntilEnd);
+      } else if (timeUntilEnd <= 0) {
+        // Exam end time has already passed
+        completeTest();
+      }
+    }
+    
+    return () => {
+      if (examEndTimer) {
+        clearTimeout(examEndTimer);
+      }
+    };
+  }, [isTestStarted, isTestCompleted, exam.exam_end_at]);
 
   // Check if exam entry is blocked based on exam_entry_block_at
   const checkEntryBlockTime = () => {
