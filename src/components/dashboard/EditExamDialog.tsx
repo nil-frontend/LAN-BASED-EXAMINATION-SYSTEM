@@ -14,8 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Edit, Trash2, Plus, Info } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit, Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Question {
@@ -45,8 +45,7 @@ const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
     description: '',
     duration_minutes: 60,
     exam_start_at: '',
-    exam_end_at: '',
-    exam_entry_block_at: '',
+    exam_privacy: 'public',
   });
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -59,8 +58,7 @@ const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
         description: exam.description || '',
         duration_minutes: exam.duration_minutes || 60,
         exam_start_at: exam.exam_start_at ? new Date(exam.exam_start_at).toISOString().slice(0, 16) : '',
-        exam_end_at: exam.exam_end_at ? new Date(exam.exam_end_at).toISOString().slice(0, 16) : '',
-        exam_entry_block_at: exam.exam_entry_block_at ? new Date(exam.exam_entry_block_at).toISOString().slice(0, 16) : '',
+        exam_privacy: exam.exam_privacy || 'public',
       });
       fetchQuestions();
     }
@@ -124,8 +122,7 @@ const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
           description: examData.description,
           duration_minutes: examData.duration_minutes,
           exam_start_at: examData.exam_start_at || null,
-          exam_end_at: examData.exam_end_at || null,
-          exam_entry_block_at: examData.exam_entry_block_at || null,
+          exam_privacy: examData.exam_privacy,
           total_marks: totalMarks,
         })
         .eq('id', exam.id);
@@ -179,229 +176,198 @@ const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
   };
 
   return (
-    <TooltipProvider>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Exam</DialogTitle>
-            <DialogDescription>
-              Update exam details and questions
-            </DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Exam Title</Label>
-                <Input
-                  id="title"
-                  value={examData.title}
-                  onChange={(e) => setExamData({...examData, title: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="exam_name">Exam Name</Label>
-                <Input
-                  id="exam_name"
-                  value={examData.exam_name}
-                  onChange={(e) => setExamData({...examData, exam_name: e.target.value})}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration (minutes)</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  value={examData.duration_minutes}
-                  onChange={(e) => setExamData({...examData, duration_minutes: parseInt(e.target.value)})}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="exam_start_at">Exam Start Time</Label>
-                <Input
-                  id="exam_start_at"
-                  type="datetime-local"
-                  value={examData.exam_start_at}
-                  onChange={(e) => setExamData({...examData, exam_start_at: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="exam_end_at">Exam End Time</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>This is optional,<br />on this time the exam will end and auto submitted</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Input
-                  id="exam_end_at"
-                  type="datetime-local"
-                  value={examData.exam_end_at}
-                  onChange={(e) => setExamData({...examData, exam_end_at: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="exam_entry_block_at">Exam Entry Block Time</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>This is optional,<br />after this time student can't enter the exam, the exam will blocked for the student who will try to enter after this time</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Input
-                  id="exam_entry_block_at"
-                  type="datetime-local"
-                  value={examData.exam_entry_block_at}
-                  onChange={(e) => setExamData({...examData, exam_entry_block_at: e.target.value})}
-                />
-              </div>
-            </div>
-            
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Exam</DialogTitle>
+          <DialogDescription>
+            Update exam details and questions
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={examData.description}
-                onChange={(e) => setExamData({...examData, description: e.target.value})}
+              <Label htmlFor="title">Exam Title</Label>
+              <Input
+                id="title"
+                value={examData.title}
+                onChange={(e) => setExamData({...examData, title: e.target.value})}
+                required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam_name">Exam Name</Label>
+              <Input
+                id="exam_name"
+                value={examData.exam_name}
+                onChange={(e) => setExamData({...examData, exam_name: e.target.value})}
+                required
+              />
+            </div>
+          </div>
 
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Questions (Total Marks: {calculateTotalMarks()})</h3>
-              </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Input
+                id="duration"
+                type="number"
+                value={examData.duration_minutes}
+                onChange={(e) => setExamData({...examData, duration_minutes: parseInt(e.target.value)})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam_start_at">Exam Start Time</Label>
+              <Input
+                id="exam_start_at"
+                type="datetime-local"
+                value={examData.exam_start_at}
+                onChange={(e) => setExamData({...examData, exam_start_at: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam_privacy">Exam Privacy</Label>
+              <Select value={examData.exam_privacy} onValueChange={(value) => setExamData({...examData, exam_privacy: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select privacy" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={examData.description}
+              onChange={(e) => setExamData({...examData, description: e.target.value})}
+            />
+          </div>
 
-              {questions.map((question, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Question {index + 1}</h4>
-                    {questions.length > 1 && (
-                      <Button
-                        type="button"
-                        onClick={() => removeQuestion(index)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Questions (Total Marks: {calculateTotalMarks()})</h3>
+            </div>
+
+            {questions.map((question, index) => (
+              <div key={index} className="border rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium">Question {index + 1}</h4>
+                  {questions.length > 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => removeQuestion(index)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Question Text</Label>
+                  <Textarea
+                    value={question.question_text}
+                    onChange={(e) => updateQuestion(index, 'question_text', e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>Question Text</Label>
-                    <Textarea
-                      value={question.question_text}
-                      onChange={(e) => updateQuestion(index, 'question_text', e.target.value)}
+                    <Label>Option A</Label>
+                    <Input
+                      value={question.option_a}
+                      onChange={(e) => updateQuestion(index, 'option_a', e.target.value)}
                       required
                     />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Option A</Label>
-                      <Input
-                        value={question.option_a}
-                        onChange={(e) => updateQuestion(index, 'option_a', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Option B</Label>
-                      <Input
-                        value={question.option_b}
-                        onChange={(e) => updateQuestion(index, 'option_b', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Option C</Label>
-                      <Input
-                        value={question.option_c}
-                        onChange={(e) => updateQuestion(index, 'option_c', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Option D</Label>
-                      <Input
-                        value={question.option_d}
-                        onChange={(e) => updateQuestion(index, 'option_d', e.target.value)}
-                        required
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label>Option B</Label>
+                    <Input
+                      value={question.option_b}
+                      onChange={(e) => updateQuestion(index, 'option_b', e.target.value)}
+                      required
+                    />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Correct Answer</Label>
-                      <select
-                        className="w-full p-2 border rounded-md"
-                        value={question.correct_answer}
-                        onChange={(e) => updateQuestion(index, 'correct_answer', e.target.value)}
-                      >
-                        <option value="A">Option A</option>
-                        <option value="B">Option B</option>
-                        <option value="C">Option C</option>
-                        <option value="D">Option D</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Marks</Label>
-                      <Input
-                        type="number"
-                        value={question.marks}
-                        onChange={(e) => updateQuestion(index, 'marks', parseInt(e.target.value))}
-                        min="1"
-                        required
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label>Option C</Label>
+                    <Input
+                      value={question.option_c}
+                      onChange={(e) => updateQuestion(index, 'option_c', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Option D</Label>
+                    <Input
+                      value={question.option_d}
+                      onChange={(e) => updateQuestion(index, 'option_d', e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
-              ))}
-
-              <div className="flex justify-center">
-                <Button type="button" onClick={addQuestion} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Question
-                </Button>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Correct Answer</Label>
+                    <select
+                      className="w-full p-2 border rounded-md"
+                      value={question.correct_answer}
+                      onChange={(e) => updateQuestion(index, 'correct_answer', e.target.value)}
+                    >
+                      <option value="A">Option A</option>
+                      <option value="B">Option B</option>
+                      <option value="C">Option C</option>
+                      <option value="D">Option D</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Marks</Label>
+                    <Input
+                      type="number"
+                      value={question.marks}
+                      onChange={(e) => updateQuestion(index, 'marks', parseInt(e.target.value))}
+                      min="1"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
+            <div className="flex justify-center">
+              <Button type="button" onClick={addQuestion} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Question
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Updating...' : 'Update Exam'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </TooltipProvider>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Updating...' : 'Update Exam'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

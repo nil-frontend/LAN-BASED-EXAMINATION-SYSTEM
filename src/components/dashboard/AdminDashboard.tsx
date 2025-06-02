@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminSidebar from './AdminSidebar';
 import CreateExamDialog from './CreateExamDialog';
 import EditExamDialog from './EditExamDialog';
@@ -32,9 +33,11 @@ import TopNavBar from './TopNavBar';
 import ExamDetailsDialog from './ExamDetailsDialog';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminDashboard = () => {
   const { profile } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [exams, setExams] = useState([]);
   const [students, setStudents] = useState([]);
@@ -62,13 +65,36 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (examResults.length > 0) {
-      // Get top 3 performers across all exams
-      const sortedResults = [...examResults]
-        .sort((a, b) => b.percentage - a.percentage)
-        .slice(0, 3);
-      setTopPerformers(sortedResults);
+      // Get top 3 performers across all exams with proper student names
+      fetchTopPerformers();
     }
   }, [examResults]);
+
+  const fetchTopPerformers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exam_results')
+        .select(`
+          *,
+          profiles!exam_results_student_id_fkey(full_name),
+          exams!exam_results_exam_id_fkey(title)
+        `)
+        .order('percentage', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      
+      const performers = data.map(result => ({
+        ...result,
+        student_name: result.profiles?.full_name || 'Unknown Student',
+        exam_title: result.exams?.title || 'Unknown Exam'
+      }));
+      
+      setTopPerformers(performers);
+    } catch (error) {
+      console.error('Error fetching top performers:', error);
+    }
+  };
 
   const fetchExams = async () => {
     try {
@@ -113,10 +139,47 @@ const AdminDashboard = () => {
 
   const deleteExam = async (examId: string) => {
     try {
-      await supabase.from('exams').delete().eq('id', examId);
+      const { error } = await supabase.from('exams').delete().eq('id', examId);
+      if (error) throw error;
+      
+      toast({
+        title: 'Success',
+        description: 'Exam deleted successfully!'
+      });
+      
       fetchExams();
     } catch (error) {
       console.error('Error deleting exam:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete exam. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const updateExamPrivacy = async (examId: string, privacy: string) => {
+    try {
+      const { error } = await supabase
+        .from('exams')
+        .update({ exam_privacy: privacy })
+        .eq('id', examId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Success',
+        description: `Exam privacy updated to ${privacy}!`
+      });
+      
+      fetchExams();
+    } catch (error) {
+      console.error('Error updating exam privacy:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update exam privacy. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -210,11 +273,18 @@ const AdminDashboard = () => {
                       <div className="flex gap-2">
                         <EditExamDialog exam={exam} onExamUpdated={fetchExams} />
                         <MockTestDialog exam={exam} />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteExam(exam.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                       <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                         <Clock className="h-5 w-5 mx-auto mb-1 text-blue-600 dark:text-blue-400" />
                         <div className="text-sm font-medium text-card-foreground">{exam.duration_minutes} mins</div>
@@ -234,6 +304,23 @@ const AdminDashboard = () => {
                         <FileText className="h-5 w-5 mx-auto mb-1 text-orange-600 dark:text-orange-400" />
                         <div className="text-sm font-medium text-card-foreground">{exam.is_active ? 'Active' : 'Inactive'}</div>
                         <div className="text-xs text-muted-foreground">Visibility</div>
+                      </div>
+                      <div className="text-center p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg border border-gray-200 dark:border-gray-800">
+                        <div className="mb-2">
+                          <div className="text-xs text-muted-foreground mb-1">Privacy</div>
+                          <Select 
+                            value={exam.exam_privacy || 'public'} 
+                            onValueChange={(value) => updateExamPrivacy(exam.id, value)}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="public">Public</SelectItem>
+                              <SelectItem value="private">Private</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
                     
@@ -348,10 +435,10 @@ const AdminDashboard = () => {
                     <CardContent className="p-6 text-center">
                       <Icon className={`h-12 w-12 ${colors[index]} mx-auto mb-3`} />
                       <h3 className="font-bold text-lg text-card-foreground mb-1">
-                        {result.student_name || 'Unknown Student'}
+                        {result.student_name}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-2">
-                        {result.exam_title || 'Unknown Exam'}
+                        {result.exam_title}
                       </p>
                       <div className="text-2xl font-bold text-primary mb-1">
                         {result.percentage.toFixed(1)}%

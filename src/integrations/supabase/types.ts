@@ -104,6 +104,7 @@ export type Database = {
           exam_end_at: string | null
           exam_entry_block_at: string | null
           exam_name: string | null
+          exam_privacy: string | null
           exam_start_at: string | null
           id: string
           is_active: boolean | null
@@ -119,6 +120,7 @@ export type Database = {
           exam_end_at?: string | null
           exam_entry_block_at?: string | null
           exam_name?: string | null
+          exam_privacy?: string | null
           exam_start_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -134,6 +136,7 @@ export type Database = {
           exam_end_at?: string | null
           exam_entry_block_at?: string | null
           exam_name?: string | null
+          exam_privacy?: string | null
           exam_start_at?: string | null
           id?: string
           is_active?: boolean | null
