@@ -59,7 +59,12 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
     } else if (timeLeft === 0 && isTestStarted && !isTestCompleted) {
-      // Only auto-submit when duration timer reaches 0
+      // Auto-submit only when exam duration ends
+      toast({
+        title: 'Time Up!',
+        description: 'Your exam time has ended. Submitting automatically.',
+        variant: 'destructive'
+      });
       completeTest();
     }
     return () => clearTimeout(timer);
@@ -268,10 +273,11 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
                 <div className="text-sm text-yellow-800">
                   <p className="font-medium mb-1">Important Instructions:</p>
                   <ul className="list-disc list-inside space-y-1">
-                    <li>You cannot pause the exam once started</li>
+                    <li>Once started, the timer will begin counting down</li>
                     <li>Make sure you have stable internet connection</li>
-                    <li>Your answers will be automatically saved</li>
+                    <li>Your answers will be automatically saved as you select them</li>
                     <li>You can only take this exam once</li>
+                    <li>The exam will automatically submit when time runs out</li>
                   </ul>
                 </div>
               </div>
@@ -335,7 +341,7 @@ const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
     <Dialog open={open} onOpenChange={(newOpen) => {
       if (!newOpen && isTestStarted) {
         // Warn before closing during exam
-        if (confirm('Are you sure you want to exit? Your progress will be lost.')) {
+        if (confirm('Are you sure you want to exit? Your progress will be saved but you cannot resume the exam.')) {
           resetTest();
           setOpen(false);
         }

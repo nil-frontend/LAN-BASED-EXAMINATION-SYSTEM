@@ -82,6 +82,23 @@ const AdminDashboard = () => {
     };
   }, []);
 
+  // Auto-refresh exam data every 3 seconds when on manage exams tab
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (activeTab === 'exams') {
+      interval = setInterval(() => {
+        fetchExams();
+      }, 3000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [activeTab]);
+
   const fetchDashboardData = async () => {
     await Promise.all([
       fetchExams(),
@@ -486,9 +503,9 @@ const AdminDashboard = () => {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Exam</AlertDialogTitle>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete this exam? This action cannot be undone and will also delete all questions and results associated with this exam.
+                                  This action cannot be undone. This will permanently delete the exam "{exam.title}" and remove all associated questions and student results from our servers.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -497,7 +514,7 @@ const AdminDashboard = () => {
                                   onClick={() => handleDeleteExam(exam.id)}
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 >
-                                  Delete
+                                  Yes, delete exam
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
