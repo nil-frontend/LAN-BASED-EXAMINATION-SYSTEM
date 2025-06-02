@@ -49,6 +49,8 @@ const AdminDashboard = () => {
   const [exams, setExams] = useState([]);
   const [results, setResults] = useState([]);
   const [students, setStudents] = useState([]);
+  const [selectedExam, setSelectedExam] = useState(null);
+  const [isExamDetailsOpen, setIsExamDetailsOpen] = useState(false);
   const [stats, setStats] = useState({
     totalExams: 0,
     totalStudents: 0,
@@ -215,6 +217,11 @@ const AdminDashboard = () => {
         variant: 'destructive'
       });
     }
+  };
+
+  const handleExamDetailsClick = (exam: any) => {
+    setSelectedExam(exam);
+    setIsExamDetailsOpen(true);
   };
 
   const renderOverview = () => (
@@ -413,7 +420,7 @@ const AdminDashboard = () => {
           <h2 className="text-2xl font-bold text-card-foreground">Manage Exams</h2>
           <p className="text-muted-foreground">Create and manage your exams</p>
         </div>
-        <CreateExamDialog onExamCreated={fetchExams} />
+        <CreateExamDialog />
       </div>
 
       <Card className="bg-card">
@@ -447,7 +454,13 @@ const AdminDashboard = () => {
                       <div className="flex flex-col gap-2">
                         <div className="flex gap-2">
                           <EditExamDialog exam={exam} onExamUpdated={fetchExams} />
-                          <ExamDetailsDialog exam={exam} />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleExamDetailsClick(exam)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <MockTestDialog exam={exam} />
                         </div>
                         
@@ -534,6 +547,17 @@ const AdminDashboard = () => {
           </main>
         </SidebarInset>
       </div>
+      
+      {selectedExam && (
+        <ExamDetailsDialog
+          exam={selectedExam}
+          isOpen={isExamDetailsOpen}
+          onClose={() => {
+            setIsExamDetailsOpen(false);
+            setSelectedExam(null);
+          }}
+        />
+      )}
     </SidebarProvider>
   );
 };
