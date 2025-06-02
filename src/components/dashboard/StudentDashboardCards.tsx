@@ -19,7 +19,7 @@ const StudentDashboardCards = () => {
 
   const fetchStudentStats = async () => {
     try {
-      // Fetch all public exams
+      // Fetch only public exams that are active
       const { data: allExams, error: examsError } = await supabase
         .from('exams')
         .select('id')
@@ -36,9 +36,9 @@ const StudentDashboardCards = () => {
 
       if (resultsError) throw resultsError;
 
-      const totalExams = allExams?.length || 0;
+      const totalPublicExams = allExams?.length || 0;
       const completedExamsCount = completedResults?.length || 0;
-      const availableExamsCount = totalExams - completedExamsCount;
+      const availableExamsCount = Math.max(0, totalPublicExams - completedExamsCount);
 
       // Calculate average score
       const avgScore = completedResults?.length > 0 

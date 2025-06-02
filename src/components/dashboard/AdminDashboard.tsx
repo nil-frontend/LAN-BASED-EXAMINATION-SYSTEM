@@ -3,97 +3,89 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminSidebar from './AdminSidebar';
 import CreateExamDialog from './CreateExamDialog';
 import EditExamDialog from './EditExamDialog';
-import MockTestDialog from './MockTestDialog';
-import PasswordUpdateDialog from './PasswordUpdateDialog';
-import ConnectionStatus from './ConnectionStatus';
-import { 
-  Users, 
-  FileText, 
-  TrendingUp, 
-  Eye,
-  Edit,
-  Trash2,
-  Play,
-  Calendar,
-  Clock,
-  Award,
-  BarChart3,
-  Trophy,
-  Medal,
-  User,
-  Mail,
-  Shield
-} from 'lucide-react';
-import TopNavBar from './TopNavBar';
 import ExamDetailsDialog from './ExamDetailsDialog';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import MockTestDialog from './MockTestDialog';
+import TopNavBar from './TopNavBar';
+import { 
+  BookOpen, 
+  Users, 
+  Award, 
+  TrendingUp, 
+  FileText, 
+  Edit,
+  Eye,
+  TestTube,
+  Trash2
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const AdminDashboard = () => {
   const { profile } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('overview');
   const [exams, setExams] = useState([]);
+  const [results, setResults] = useState([]);
   const [students, setStudents] = useState([]);
-  const [examResults, setExamResults] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredExams, setFilteredExams] = useState([]);
-  const [selectedExam, setSelectedExam] = useState(null);
-  const [isExamDetailsOpen, setIsExamDetailsOpen] = useState(false);
-  const [topPerformers, setTopPerformers] = useState([]);
+  const [stats, setStats] = useState({
+    totalExams: 0,
+    totalStudents: 0,
+    totalResults: 0,
+    averageScore: 0
+  });
 
   useEffect(() => {
-    fetchExams();
-    fetchStudents();
-    fetchExamResults();
+    fetchDashboardData();
+    
+    // Set up real-time subscriptions for auto-refresh
+    const examsChannel = supabase
+      .channel('exams_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'exams' }, () => {
+        fetchExams();
+      })
+      .subscribe();
+
+    const resultsChannel = supabase
+      .channel('results_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'exam_results' }, () => {
+        fetchResults();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(examsChannel);
+      supabase.removeChannel(resultsChannel);
+    };
   }, []);
 
-  useEffect(() => {
-    // Filter exams based on search term
-    const filtered = exams.filter(exam => 
-      exam.exam_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      exam.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredExams(filtered);
-  }, [exams, searchTerm]);
-
-  useEffect(() => {
-    if (examResults.length > 0) {
-      // Get top 3 performers across all exams with proper student names
-      fetchTopPerformers();
-    }
-  }, [examResults]);
-
-  const fetchTopPerformers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('exam_results')
-        .select(`
-          *,
-          profiles!exam_results_student_id_fkey(full_name),
-          exams!exam_results_exam_id_fkey(title)
-        `)
-        .order('percentage', { ascending: false })
-        .limit(3);
-
-      if (error) throw error;
-      
-      const performers = data.map(result => ({
-        ...result,
-        student_name: result.profiles?.full_name || 'Unknown Student',
-        exam_title: result.exams?.title || 'Unknown Exam'
-      }));
-      
-      setTopPerformers(performers);
-    } catch (error) {
-      console.error('Error fetching top performers:', error);
-    }
+  const fetchDashboardData = async () => {
+    await Promise.all([
+      fetchExams(),
+      fetchResults(),
+      fetchStudents()
+    ]);
   };
 
   const fetchExams = async () => {
@@ -105,8 +97,40 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       setExams(data || []);
+      setStats(prev => ({ ...prev, totalExams: data?.length || 0 }));
     } catch (error) {
       console.error('Error fetching exams:', error);
+    }
+  };
+
+  const fetchResults = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exam_results')
+        .select(`
+          *,
+          exams!exam_results_exam_id_fkey(title),
+          profiles!exam_results_student_id_fkey(full_name)
+        `)
+        .order('completed_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const formattedResults = data || [];
+      setResults(formattedResults);
+      
+      // Calculate average score
+      const avgScore = formattedResults.length > 0 
+        ? formattedResults.reduce((sum, result) => sum + result.percentage, 0) / formattedResults.length
+        : 0;
+
+      setStats(prev => ({
+        ...prev,
+        totalResults: formattedResults.length,
+        averageScore: Math.round(avgScore * 10) / 10
+      }));
+    } catch (error) {
+      console.error('Error fetching results:', error);
     }
   };
 
@@ -115,298 +139,227 @@ const AdminDashboard = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('is_student', true);
+        .eq('is_student', true)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setStudents(data || []);
+      setStats(prev => ({ ...prev, totalStudents: data?.length || 0 }));
     } catch (error) {
       console.error('Error fetching students:', error);
     }
   };
 
-  const fetchExamResults = async () => {
+  const handleDeleteExam = async (examId: string) => {
     try {
-      const { data, error } = await supabase
+      // First delete all questions for this exam
+      const { error: questionsError } = await supabase
+        .from('questions')
+        .delete()
+        .eq('exam_id', examId);
+
+      if (questionsError) throw questionsError;
+
+      // Then delete all exam results for this exam
+      const { error: resultsError } = await supabase
         .from('exam_results')
-        .select('*');
+        .delete()
+        .eq('exam_id', examId);
+
+      if (resultsError) throw resultsError;
+
+      // Finally delete the exam
+      const { error } = await supabase
+        .from('exams')
+        .delete()
+        .eq('id', examId);
 
       if (error) throw error;
-      setExamResults(data || []);
-    } catch (error) {
-      console.error('Error fetching exam results:', error);
-    }
-  };
 
-  const deleteExam = async (examId: string) => {
-    try {
-      const { error } = await supabase.from('exams').delete().eq('id', examId);
-      if (error) throw error;
-      
       toast({
-        title: 'Success',
-        description: 'Exam deleted successfully!'
+        title: 'Exam Deleted',
+        description: 'Exam and all related data have been deleted successfully',
       });
-      
+
       fetchExams();
     } catch (error) {
       console.error('Error deleting exam:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete exam. Please try again.',
+        description: 'Failed to delete exam',
         variant: 'destructive'
       });
     }
   };
 
-  const updateExamPrivacy = async (examId: string, privacy: string) => {
+  const handlePrivacyChange = async (examId: string, newPrivacy: string) => {
     try {
       const { error } = await supabase
         .from('exams')
-        .update({ exam_privacy: privacy })
+        .update({ exam_privacy: newPrivacy })
         .eq('id', examId);
-      
+
       if (error) throw error;
-      
+
       toast({
-        title: 'Success',
-        description: `Exam privacy updated to ${privacy}!`
+        title: 'Privacy Updated',
+        description: `Exam privacy changed to ${newPrivacy}`,
       });
-      
+
       fetchExams();
     } catch (error) {
       console.error('Error updating exam privacy:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update exam privacy. Please try again.',
+        description: 'Failed to update exam privacy',
         variant: 'destructive'
       });
     }
   };
 
-  const formatDateTime = (dateString: string | null) => {
-    if (!dateString) return 'Not scheduled';
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getExamStatus = (exam: any) => {
-    if (!exam.exam_start_at) return 'available';
-    const now = new Date();
-    const startTime = new Date(exam.exam_start_at);
-    
-    if (now >= startTime) return 'started';
-    return 'scheduled';
-  };
-
-  const renderDashboard = () => (
+  const renderOverview = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-card">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-l-4 border-l-blue-500 bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-card-foreground">Total Exams</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <BookOpen className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">{exams.length}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.totalExams}</div>
             <p className="text-xs text-muted-foreground">
               Active examinations
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-card">
+        
+        <Card className="border-l-4 border-l-green-500 bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-card-foreground">Total Students</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-card-foreground">Students</CardTitle>
+            <Users className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">{students.length}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.totalStudents}</div>
             <p className="text-xs text-muted-foreground">
               Registered students
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-card">
+        
+        <Card className="border-l-4 border-l-purple-500 bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-card-foreground">Total Results</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-card-foreground">Exam Results</CardTitle>
+            <Award className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">{examResults.length}</div>
+            <div className="text-2xl font-bold text-purple-600">{stats.totalResults}</div>
             <p className="text-xs text-muted-foreground">
               Completed attempts
             </p>
           </CardContent>
         </Card>
+        
+        <Card className="border-l-4 border-l-orange-500 bg-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-card-foreground">Average Score</CardTitle>
+            <TrendingUp className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {stats.averageScore > 0 ? `${stats.averageScore}%` : '-'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Overall performance
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card className="bg-card">
-        <CardHeader>
-          <CardTitle className="text-card-foreground">Quick Actions</CardTitle>
-          <CardDescription>Get started with these common tasks</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-4">
-          <CreateExamDialog />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-card">
+          <CardHeader>
+            <CardTitle className="text-card-foreground">Recent Exams</CardTitle>
+            <CardDescription>Latest created examinations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {exams.slice(0, 5).map((exam: any) => (
+              <div key={exam.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                <div>
+                  <p className="font-medium text-card-foreground">{exam.title}</p>
+                  <p className="text-sm text-muted-foreground">{exam.duration_minutes} mins • {exam.total_marks} marks</p>
+                </div>
+                <Badge variant={exam.is_active ? 'default' : 'secondary'}>
+                  {exam.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card">
+          <CardHeader>
+            <CardTitle className="text-card-foreground">Top Students</CardTitle>
+            <CardDescription>Best performing students</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {results
+              .filter(result => result.profiles?.full_name)
+              .sort((a, b) => b.percentage - a.percentage)
+              .slice(0, 5)
+              .map((result: any, index) => (
+                <div key={result.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium text-card-foreground">{result.profiles?.full_name}</p>
+                      <p className="text-sm text-muted-foreground">{result.exams?.title}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-card-foreground">{result.percentage.toFixed(1)}%</p>
+                    <p className="text-sm text-muted-foreground">{result.score}/{result.total_marks}</p>
+                  </div>
+                </div>
+              ))}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 
-  const renderExams = () => (
+  const renderStudents = () => (
     <Card className="bg-card">
       <CardHeader>
-        <CardTitle className="text-card-foreground">Manage Exams</CardTitle>
-        <CardDescription>View and manage your examinations</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {exams.length > 0 ? (
-          <div className="space-y-4">
-            {exams.map((exam: any) => {
-              const status = getExamStatus(exam);
-              return (
-                <Card key={exam.id} className="border-l-4 border-l-primary bg-card">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl mb-1 text-card-foreground">{exam.title}</CardTitle>
-                        <p className="text-sm text-muted-foreground mb-2">{exam.exam_name}</p>
-                        <p className="text-sm text-muted-foreground">{exam.description}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <EditExamDialog exam={exam} onExamUpdated={fetchExams} />
-                        <MockTestDialog exam={exam} />
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteExam(exam.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                      <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <Clock className="h-5 w-5 mx-auto mb-1 text-blue-600 dark:text-blue-400" />
-                        <div className="text-sm font-medium text-card-foreground">{exam.duration_minutes} mins</div>
-                        <div className="text-xs text-muted-foreground">Duration</div>
-                      </div>
-                      <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <Award className="h-5 w-5 mx-auto mb-1 text-green-600 dark:text-green-400" />
-                        <div className="text-sm font-medium text-card-foreground">{exam.total_marks}</div>
-                        <div className="text-xs text-muted-foreground">Total Marks</div>
-                      </div>
-                      <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                        <BarChart3 className="h-5 w-5 mx-auto mb-1 text-purple-600 dark:text-purple-400" />
-                        <div className="text-sm font-medium text-card-foreground">{status === 'started' ? 'Active' : status === 'scheduled' ? 'Scheduled' : 'Available'}</div>
-                        <div className="text-xs text-muted-foreground">Status</div>
-                      </div>
-                      <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                        <FileText className="h-5 w-5 mx-auto mb-1 text-orange-600 dark:text-orange-400" />
-                        <div className="text-sm font-medium text-card-foreground">{exam.is_active ? 'Active' : 'Inactive'}</div>
-                        <div className="text-xs text-muted-foreground">Visibility</div>
-                      </div>
-                      <div className="text-center p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg border border-gray-200 dark:border-gray-800">
-                        <div className="mb-2">
-                          <div className="text-xs text-muted-foreground mb-1">Privacy</div>
-                          <Select 
-                            value={exam.exam_privacy || 'public'} 
-                            onValueChange={(value) => updateExamPrivacy(exam.id, value)}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="public">Public</SelectItem>
-                              <SelectItem value="private">Private</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {exam.exam_start_at && (
-                      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                          <span className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
-                            Scheduled for: {formatDateTime(exam.exam_start_at)}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-card-foreground mb-2">No exams yet</h3>
-            <p className="text-muted-foreground mb-6">Create your first exam to get started</p>
-            <CreateExamDialog />
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  const renderStudents = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>Manage Students</CardTitle>
-        <CardDescription>View and manage your students</CardDescription>
+        <CardTitle className="text-card-foreground">All Students</CardTitle>
+        <CardDescription>Manage registered students</CardDescription>
       </CardHeader>
       <CardContent>
         {students.length > 0 ? (
           <div className="space-y-4">
             {students.map((student: any) => (
-              <Card key={student.id} className="border-l-4 border-l-primary">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl mb-1">{student.full_name}</CardTitle>
-                      <p className="text-sm text-muted-foreground mb-2">{student.email}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => deleteExam(student.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+              <div key={student.id} className="border border-border rounded-lg p-4 bg-card">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-card-foreground">{student.full_name}</h3>
+                    <p className="text-sm text-muted-foreground">{student.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Joined: {new Date(student.created_at).toLocaleDateString()}
+                    </p>
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <Eye className="h-5 w-5 mx-auto mb-1 text-blue-600" />
-                      <div className="text-sm font-medium">{student.profile_picture}</div>
-                      <div className="text-xs text-muted-foreground">Profile Picture</div>
-                    </div>
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <Edit className="h-5 w-5 mx-auto mb-1 text-green-600" />
-                      <div className="text-sm font-medium">{student.phone_number}</div>
-                      <div className="text-xs text-muted-foreground">Phone Number</div>
-                    </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-lg">
-                      <Play className="h-5 w-5 mx-auto mb-1 text-purple-600" />
-                      <div className="text-sm font-medium">{student.gender}</div>
-                      <div className="text-xs text-muted-foreground">Gender</div>
-                    </div>
-                    <div className="text-center p-3 bg-orange-50 rounded-lg">
-                      <FileText className="h-5 w-5 mx-auto mb-1 text-orange-600" />
-                      <div className="text-sm font-medium">{student.dob}</div>
-                      <div className="text-xs text-muted-foreground">Date of Birth</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Badge variant={student.admin_approved ? 'default' : 'secondary'}>
+                    {student.admin_approved ? 'Approved' : 'Pending'}
+                  </Badge>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-8">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No students yet</h3>
-            <p className="text-gray-600">Students will appear here once they register</p>
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-card-foreground mb-2">No students yet</h3>
+            <p className="text-muted-foreground">Students will appear here once they register</p>
           </div>
         )}
       </CardContent>
@@ -414,189 +367,142 @@ const AdminDashboard = () => {
   );
 
   const renderResults = () => (
-    <div className="space-y-6">
-      {/* Top 3 Performers Hero Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Top 3 Performers</CardTitle>
-          <CardDescription>Highest scoring students across all exams</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {topPerformers.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {topPerformers.map((result, index) => {
-                const icons = [Trophy, Medal, Award];
-                const colors = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
-                const bgColors = ['bg-yellow-50 dark:bg-yellow-900/20', 'bg-gray-50 dark:bg-gray-900/20', 'bg-amber-50 dark:bg-amber-900/20'];
-                const Icon = icons[index];
-                
-                return (
-                  <Card key={result.id} className={`${bgColors[index]} border-2`}>
-                    <CardContent className="p-6 text-center">
-                      <Icon className={`h-12 w-12 ${colors[index]} mx-auto mb-3`} />
-                      <h3 className="font-bold text-lg text-card-foreground mb-1">
-                        {result.student_name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {result.exam_title}
-                      </p>
-                      <div className="text-2xl font-bold text-primary mb-1">
-                        {result.percentage.toFixed(1)}%
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {result.score}/{result.total_marks} marks
-                      </div>
-                      <div className="mt-3 text-2xl font-bold text-muted-foreground">
-                        #{index + 1}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No results yet</h3>
-              <p className="text-gray-600">Results will appear here once students take exams</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Exams List with Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Exam Results by Subject</CardTitle>
-          <CardDescription>Click on any exam to view detailed student results</CardDescription>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search by subject name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+    <Card className="bg-card">
+      <CardHeader>
+        <CardTitle className="text-card-foreground">All Exam Results</CardTitle>
+        <CardDescription>View all student exam results</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {results.length > 0 ? (
+          <div className="space-y-4">
+            {results.map((result: any) => (
+              <div key={result.id} className="border border-border rounded-lg p-4 bg-card">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-card-foreground">{result.profiles?.full_name || 'Unknown Student'}</h3>
+                    <p className="text-sm text-muted-foreground">{result.exams?.title || 'Unknown Exam'}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Completed: {result.completed_at ? new Date(result.completed_at).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-card-foreground">{result.percentage.toFixed(1)}%</div>
+                    <div className="text-sm text-muted-foreground">
+                      {result.score}/{result.total_marks}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </CardHeader>
-        <CardContent>
-          {filteredExams.length > 0 ? (
-            <div className="space-y-3">
-              {filteredExams.map((exam) => {
-                const examResultsCount = examResults.filter(result => result.exam_id === exam.id).length;
-                const avgScore = examResults
-                  .filter(result => result.exam_id === exam.id)
-                  .reduce((acc, curr, _, arr) => acc + curr.percentage / arr.length, 0);
-
-                return (
-                  <Card 
-                    key={exam.id} 
-                    className="border-l-4 border-l-primary cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => {
-                      setSelectedExam(exam);
-                      setIsExamDetailsOpen(true);
-                    }}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-card-foreground mb-1">
-                            {exam.title}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            Subject: {exam.exam_name}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-primary">
-                            {examResultsCount} students
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {examResultsCount > 0 ? `Avg: ${avgScore.toFixed(1)}%` : 'No attempts'}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm ? 'No exams found' : 'No exams available'}
-              </h3>
-              <p className="text-gray-600">
-                {searchTerm ? 'Try adjusting your search term' : 'Create exams to see results here'}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <ExamDetailsDialog
-        exam={selectedExam}
-        isOpen={isExamDetailsOpen}
-        onClose={() => {
-          setIsExamDetailsOpen(false);
-          setSelectedExam(null);
-        }}
-      />
-    </div>
+        ) : (
+          <div className="text-center py-8">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-card-foreground mb-2">No results yet</h3>
+            <p className="text-muted-foreground">Exam results will appear here once students complete exams</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 
-  const renderProfile = () => (
+  const renderExams = () => (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-card-foreground">Manage Exams</h2>
+          <p className="text-muted-foreground">Create and manage your exams</p>
+        </div>
+        <CreateExamDialog onExamCreated={fetchExams} />
+      </div>
+
       <Card className="bg-card">
         <CardHeader>
-          <CardTitle className="text-card-foreground">Profile Settings</CardTitle>
-          <CardDescription>Manage your account information</CardDescription>
+          <CardTitle className="text-card-foreground">All Exams</CardTitle>
+          <CardDescription>Manage your exam collection</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="p-4 border border-border rounded-lg bg-muted/20">
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Full Name</label>
-                  <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-primary" />
-                    <p className="text-card-foreground font-medium">{profile?.full_name}</p>
-                  </div>
-                </div>
-                
-                <div className="p-4 border border-border rounded-lg bg-muted/20">
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Email Address</label>
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-primary" />
-                    <p className="text-card-foreground font-medium">{profile?.email}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="p-4 border border-border rounded-lg bg-muted/20">
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Role</label>
-                  <div className="flex items-center gap-3">
-                    <Shield className="h-5 w-5 text-primary" />
-                    <p className="text-card-foreground font-medium">Administrator</p>
-                  </div>
-                </div>
-                
-                <div className="p-4 border border-border rounded-lg bg-muted/20">
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Status</label>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <p className="text-green-500 font-medium">Approved</p>
-                  </div>
-                </div>
-              </div>
+          {exams.length > 0 ? (
+            <div className="space-y-4">
+              {exams.map((exam: any) => (
+                <Card key={exam.id} className="border-l-4 border-l-primary bg-card">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-card-foreground">{exam.title}</h3>
+                          <Badge variant={exam.exam_privacy === 'public' ? 'default' : 'secondary'}>
+                            {exam.exam_privacy}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{exam.exam_name}</p>
+                        <p className="text-sm text-muted-foreground mb-4">{exam.description}</p>
+                        <div className="flex gap-4 text-sm text-muted-foreground">
+                          <span>Duration: {exam.duration_minutes} mins</span>
+                          <span>Total Marks: {exam.total_marks}</span>
+                          <span>Created: {new Date(exam.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <EditExamDialog exam={exam} onExamUpdated={fetchExams} />
+                          <ExamDetailsDialog exam={exam} />
+                          <MockTestDialog exam={exam} />
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Select
+                            value={exam.exam_privacy}
+                            onValueChange={(value) => handlePrivacyChange(exam.id, value)}
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="public">Public</SelectItem>
+                              <SelectItem value="private">Private</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Exam</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this exam? This action cannot be undone and will also delete all questions and results associated with this exam.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteExam(exam.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            
-            <div className="pt-4 border-t border-border">
-              <PasswordUpdateDialog />
+          ) : (
+            <div className="text-center py-12">
+              <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-card-foreground mb-2">No exams yet</h3>
+              <p className="text-muted-foreground">Create your first exam to get started</p>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -604,18 +510,16 @@ const AdminDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard':
-        return renderDashboard();
+      case 'overview':
+        return renderOverview();
       case 'exams':
         return renderExams();
       case 'students':
         return renderStudents();
       case 'results':
         return renderResults();
-      case 'profile':
-        return renderProfile();
       default:
-        return renderDashboard();
+        return renderOverview();
     }
   };
 

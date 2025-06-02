@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,12 +9,12 @@ import StudentSidebar from './StudentSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
 import TakeExamDialog from './TakeExamDialog';
 import TopNavBar from './TopNavBar';
+import StudentDashboardCards from './StudentDashboardCards';
 import { 
   Clock, 
   Award, 
   User,
   FileText,
-  TrendingUp,
   Calendar,
   Play,
   CheckCircle,
@@ -27,11 +28,6 @@ const StudentDashboard = () => {
   const [exams, setExams] = useState([]);
   const [results, setResults] = useState([]);
   const [completedExamIds, setCompletedExamIds] = useState(new Set());
-  const [stats, setStats] = useState({
-    availableExams: 0,
-    completedExams: 0,
-    averageScore: 0
-  });
 
   useEffect(() => {
     fetchExams();
@@ -48,15 +44,16 @@ const StudentDashboard = () => {
 
   const fetchExams = async () => {
     try {
+      // Only fetch public and active exams for students
       const { data, error } = await supabase
         .from('exams')
         .select('*')
+        .eq('exam_privacy', 'public')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setExams(data || []);
-      setStats(prev => ({ ...prev, availableExams: data?.length || 0 }));
     } catch (error) {
       console.error('Error fetching exams:', error);
     }
@@ -83,18 +80,6 @@ const StudentDashboard = () => {
       // Track completed exam IDs
       const completedIds = new Set(formattedResults.map(result => result.exam_id));
       setCompletedExamIds(completedIds);
-      
-      // Calculate stats
-      const completedCount = formattedResults.length;
-      const averageScore = completedCount > 0 
-        ? formattedResults.reduce((sum, result) => sum + result.percentage, 0) / completedCount 
-        : 0;
-
-      setStats(prev => ({
-        ...prev,
-        completedExams: completedCount,
-        averageScore: Math.round(averageScore * 10) / 10
-      }));
     } catch (error) {
       console.error('Error fetching results:', error);
     }
@@ -125,46 +110,7 @@ const StudentDashboard = () => {
 
   const renderExams = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-l-4 border-l-blue-500 bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-card-foreground">Available Exams</CardTitle>
-            <FileText className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.availableExams}</div>
-            <p className="text-xs text-muted-foreground">
-              Ready to take
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-green-500 bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-card-foreground">Completed</CardTitle>
-            <Award className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.completedExams}</div>
-            <p className="text-xs text-muted-foreground">
-              Exams taken
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-purple-500 bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-card-foreground">Average Score</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {stats.averageScore > 0 ? `${stats.averageScore}%` : '-'}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Overall performance
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <StudentDashboardCards />
 
       <Card className="bg-card">
         <CardHeader>
