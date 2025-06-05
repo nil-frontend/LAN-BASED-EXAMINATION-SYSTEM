@@ -55,7 +55,6 @@ const AdminDashboard = () => {
   const [students, setStudents] = useState([]);
   const [selectedExam, setSelectedExam] = useState(null);
   const [isExamDetailsOpen, setIsExamDetailsOpen] = useState(false);
-  const [isCreateExamOpen, setIsCreateExamOpen] = useState(false);
   const [stats, setStats] = useState({
     totalExams: 0,
     totalStudents: 0,
@@ -104,11 +103,10 @@ const AdminDashboard = () => {
     };
   }, [activeTab]);
 
-  // Handle create exam tab
+  // Handle create exam tab - just switch to exams tab since CreateExamDialog manages its own state
   useEffect(() => {
     if (activeTab === 'create-exam') {
-      setIsCreateExamOpen(true);
-      setActiveTab('overview'); // Reset to overview after opening dialog
+      setActiveTab('exams');
     }
   }, [activeTab]);
 
@@ -172,7 +170,7 @@ const AdminDashboard = () => {
         .from('profiles')
         .select('*')
         .eq('is_student', true)
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (error) throw error;
       setStudents(data || []);
@@ -438,7 +436,7 @@ const AdminDashboard = () => {
                     <h3 className="font-semibold text-card-foreground">{student.full_name}</h3>
                     <p className="text-sm text-muted-foreground">{student.email}</p>
                     <p className="text-sm text-muted-foreground">
-                      Joined: {new Date(student.created_at).toLocaleDateString()}
+                      Joined: {new Date(student.updated_at).toLocaleDateString()}
                     </p>
                   </div>
                   <Badge variant={student.admin_approved ? 'default' : 'secondary'}>
@@ -646,12 +644,6 @@ const AdminDashboard = () => {
           }}
         />
       )}
-
-      <CreateExamDialog 
-        isOpen={isCreateExamOpen} 
-        onClose={() => setIsCreateExamOpen(false)} 
-        onExamCreated={fetchExams}
-      />
     </SidebarProvider>
   );
 };
