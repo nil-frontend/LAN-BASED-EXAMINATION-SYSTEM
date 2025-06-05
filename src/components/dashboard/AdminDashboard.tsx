@@ -10,6 +10,7 @@ import CreateExamDialog from './CreateExamDialog';
 import EditExamDialog from './EditExamDialog';
 import ExamDetailsDialog from './ExamDetailsDialog';
 import MockTestDialog from './MockTestDialog';
+import PasswordUpdateDialog from './PasswordUpdateDialog';
 import TopNavBar from './TopNavBar';
 import { 
   BookOpen, 
@@ -20,7 +21,8 @@ import {
   Edit,
   Eye,
   TestTube,
-  Trash2
+  Trash2,
+  User
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -51,6 +53,7 @@ const AdminDashboard = () => {
   const [students, setStudents] = useState([]);
   const [selectedExam, setSelectedExam] = useState(null);
   const [isExamDetailsOpen, setIsExamDetailsOpen] = useState(false);
+  const [isCreateExamOpen, setIsCreateExamOpen] = useState(false);
   const [stats, setStats] = useState({
     totalExams: 0,
     totalStudents: 0,
@@ -97,6 +100,14 @@ const AdminDashboard = () => {
         clearInterval(interval);
       }
     };
+  }, [activeTab]);
+
+  // Handle create exam tab
+  useEffect(() => {
+    if (activeTab === 'create-exam') {
+      setIsCreateExamOpen(true);
+      setActiveTab('overview'); // Reset to overview after opening dialog
+    }
   }, [activeTab]);
 
   const fetchDashboardData = async () => {
@@ -240,6 +251,65 @@ const AdminDashboard = () => {
     setSelectedExam(exam);
     setIsExamDetailsOpen(true);
   };
+
+  const renderProfile = () => (
+    <Card className="bg-card max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-card-foreground">
+          <User className="h-5 w-5" />
+          Admin Profile
+        </CardTitle>
+        <CardDescription>Manage your admin account settings</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-card-foreground">Full Name</label>
+            <div className="p-3 bg-muted rounded-md text-card-foreground">
+              {profile?.full_name || 'Not provided'}
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-card-foreground">Email</label>
+            <div className="p-3 bg-muted rounded-md text-card-foreground">
+              {profile?.email || 'Not provided'}
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-card-foreground">Role</label>
+            <div className="p-3 bg-muted rounded-md">
+              <Badge variant="default">Administrator</Badge>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-card-foreground">Account Status</label>
+            <div className="p-3 bg-muted rounded-md">
+              <Badge variant={profile?.admin_approved ? "default" : "secondary"}>
+                {profile?.admin_approved ? "Approved" : "Pending"}
+              </Badge>
+            </div>
+          </div>
+        </div>
+        
+        <div className="pt-4 border-t border-border">
+          <h3 className="text-lg font-medium text-card-foreground mb-4">Account Security</h3>
+          <div className="space-y-4">
+            <PasswordUpdateDialog />
+          </div>
+        </div>
+        
+        <div className="pt-4 border-t border-border">
+          <h3 className="text-lg font-medium text-card-foreground mb-2">Account Information</h3>
+          <p className="text-sm text-muted-foreground">
+            Account created: {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Unknown'}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   const renderOverview = () => (
     <div className="space-y-6">
@@ -548,6 +618,8 @@ const AdminDashboard = () => {
         return renderStudents();
       case 'results':
         return renderResults();
+      case 'profile':
+        return renderProfile();
       default:
         return renderOverview();
     }
@@ -575,6 +647,12 @@ const AdminDashboard = () => {
           }}
         />
       )}
+
+      <CreateExamDialog 
+        isOpen={isCreateExamOpen} 
+        onClose={() => setIsCreateExamOpen(false)} 
+        onExamCreated={fetchExams}
+      />
     </SidebarProvider>
   );
 };

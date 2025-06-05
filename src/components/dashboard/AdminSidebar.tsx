@@ -72,7 +72,7 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
         <div className="flex items-center gap-2">
           <BookOpen className="h-8 w-8 text-blue-600" />
           <div>
-            <h1 className="font-semibold text-lg">Exam Nexus</h1>
+            <h1 className="font-semibold text-lg">Exam Antyvest</h1>
             <p className="text-sm text-muted-foreground">Admin Panel</p>
           </div>
         </div>
