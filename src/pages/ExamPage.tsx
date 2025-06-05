@@ -25,7 +25,7 @@ interface Exam {
   description: string;
   duration_minutes: number;
   total_marks: number;
-  is_public: boolean;
+  exam_privacy: string;
 }
 
 const ExamPage = () => {
@@ -63,7 +63,7 @@ const ExamPage = () => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
     } else if (timeLeft === 0 && isExamStarted && !isExamCompleted) {
-      // Auto-submit only when exam duration ends
+      // Time's up - complete the exam
       toast({
         title: 'Time Up!',
         description: 'Your exam time has ended. Submitting automatically.',
@@ -87,7 +87,7 @@ const ExamPage = () => {
 
       if (examError) throw examError;
 
-      if (!examData.is_public) {
+      if (examData.exam_privacy !== 'public') {
         toast({
           title: 'Access Denied',
           description: 'This exam is not publicly available.',
