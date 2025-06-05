@@ -36,17 +36,7 @@ const TopNavBar = () => {
 
   return (
     <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border w-full">
-      <div className="flex justify-between items-center px-6 py-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">EN</span>
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Exam Nexus</h1>
-            <p className="text-xs text-muted-foreground">Student Portal</p>
-          </div>
-        </div>
-        
+      <div className="flex justify-end items-center px-6 py-3">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             {isOnline ? (

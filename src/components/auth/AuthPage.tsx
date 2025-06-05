@@ -40,7 +40,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="w-full max-w-md p-6">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -57,20 +57,20 @@ const AuthPage = () => {
           </TabsList>
 
           <TabsContent value="login">
-            <Card>
+            <Card className="bg-white border border-gray-200">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900">
                   <UserCheck className="h-5 w-5" />
                   Login
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-600">
                   Enter your credentials to access the system
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email" className="text-gray-700">Email</Label>
                     <Input
                       id="login-email"
                       type="email"
@@ -78,10 +78,11 @@ const AuthPage = () => {
                       value={loginForm.email}
                       onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                       required
+                      className="bg-white border-gray-300 text-gray-900"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
+                    <Label htmlFor="login-password" className="text-gray-700">Password</Label>
                     <Input
                       id="login-password"
                       type="password"
@@ -89,6 +90,7 @@ const AuthPage = () => {
                       value={loginForm.password}
                       onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                       required
+                      className="bg-white border-gray-300 text-gray-900"
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
@@ -100,20 +102,20 @@ const AuthPage = () => {
           </TabsContent>
 
           <TabsContent value="signup">
-            <Card>
+            <Card className="bg-white border border-gray-200">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900">
                   <GraduationCap className="h-5 w-5" />
                   Sign Up
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-600">
                   Create a new account to get started
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label htmlFor="signup-name" className="text-gray-700">Full Name</Label>
                     <Input
                       id="signup-name"
                       type="text"
@@ -121,10 +123,11 @@ const AuthPage = () => {
                       value={signupForm.fullName}
                       onChange={(e) => setSignupForm({ ...signupForm, fullName: e.target.value })}
                       required
+                      className="bg-white border-gray-300 text-gray-900"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email" className="text-gray-700">Email</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -132,10 +135,11 @@ const AuthPage = () => {
                       value={signupForm.email}
                       onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
                       required
+                      className="bg-white border-gray-300 text-gray-900"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password" className="text-gray-700">Password</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -143,6 +147,7 @@ const AuthPage = () => {
                       value={signupForm.password}
                       onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
                       required
+                      className="bg-white border-gray-300 text-gray-900"
                     />
                   </div>
                   <div className="flex items-center space-x-2">
@@ -153,12 +158,12 @@ const AuthPage = () => {
                         setSignupForm({ ...signupForm, isAdmin: checked as boolean })
                       }
                     />
-                    <Label htmlFor="is-admin" className="text-sm">
+                    <Label htmlFor="is-admin" className="text-sm text-gray-700">
                       Register as Administrator
                     </Label>
                   </div>
                   {signupForm.isAdmin && (
-                    <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md">
+                    <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
                       <strong>Note:</strong> Admin accounts require approval before you can log in.
                     </div>
                   )}
