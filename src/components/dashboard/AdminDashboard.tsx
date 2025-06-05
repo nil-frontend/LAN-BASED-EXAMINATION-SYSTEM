@@ -22,7 +22,9 @@ import {
   Eye,
   TestTube,
   Trash2,
-  User
+  User,
+  Mail,
+  Shield
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -253,62 +255,59 @@ const AdminDashboard = () => {
   };
 
   const renderProfile = () => (
-    <Card className="bg-card max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-card-foreground">
-          <User className="h-5 w-5" />
-          Admin Profile
-        </CardTitle>
-        <CardDescription>Manage your admin account settings</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-card-foreground">Full Name</label>
-            <div className="p-3 bg-muted rounded-md text-card-foreground">
-              {profile?.full_name || 'Not provided'}
+    <div className="space-y-6">
+      <Card className="bg-card">
+        <CardHeader>
+          <CardTitle className="text-card-foreground">Profile Information</CardTitle>
+          <CardDescription>Your account details</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Full Name</label>
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-primary" />
+                    <p className="text-card-foreground font-medium">{profile?.full_name}</p>
+                  </div>
+                </div>
+                
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Email Address</label>
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-primary" />
+                    <p className="text-card-foreground font-medium">{profile?.email}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Role</label>
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <p className="text-card-foreground font-medium">Administrator</p>
+                  </div>
+                </div>
+                
+                <div className="p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Account Status</label>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <p className="text-green-500 font-medium">Active</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-border">
+              <PasswordUpdateDialog />
             </div>
           </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-card-foreground">Email</label>
-            <div className="p-3 bg-muted rounded-md text-card-foreground">
-              {profile?.email || 'Not provided'}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-card-foreground">Role</label>
-            <div className="p-3 bg-muted rounded-md">
-              <Badge variant="default">Administrator</Badge>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-card-foreground">Account Status</label>
-            <div className="p-3 bg-muted rounded-md">
-              <Badge variant={profile?.admin_approved ? "default" : "secondary"}>
-                {profile?.admin_approved ? "Approved" : "Pending"}
-              </Badge>
-            </div>
-          </div>
-        </div>
-        
-        <div className="pt-4 border-t border-border">
-          <h3 className="text-lg font-medium text-card-foreground mb-4">Account Security</h3>
-          <div className="space-y-4">
-            <PasswordUpdateDialog />
-          </div>
-        </div>
-        
-        <div className="pt-4 border-t border-border">
-          <h3 className="text-lg font-medium text-card-foreground mb-2">Account Information</h3>
-          <p className="text-sm text-muted-foreground">
-            Account created: {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Unknown'}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderOverview = () => (

@@ -19,9 +19,10 @@ import { useToast } from '@/hooks/use-toast';
 
 interface TakeExamDialogProps {
   exam: any;
+  onExamCompleted?: () => Promise<void>;
 }
 
-const TakeExamDialog = ({ exam }: TakeExamDialogProps) => {
+const TakeExamDialog = ({ exam, onExamCompleted }: TakeExamDialogProps) => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
