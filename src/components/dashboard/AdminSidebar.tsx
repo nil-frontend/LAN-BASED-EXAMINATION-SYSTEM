@@ -68,20 +68,20 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
   ];
 
   return (
-    <Sidebar className="border-r">
-      <SidebarHeader className="border-b p-4">
+    <Sidebar className="border-r border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2">
           <BookOpen className="h-8 w-8 text-blue-600" />
           <div>
-            <h1 className="font-semibold text-lg">Exam Antyvest</h1>
-            <p className="text-sm text-muted-foreground">Admin Panel</p>
+            <h1 className="font-semibold text-lg text-sidebar-foreground">Exam Antyvest</h1>
+            <p className="text-sm text-sidebar-foreground/70">Admin Panel</p>
           </div>
         </div>
       </SidebarHeader>
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground/70">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -89,6 +89,7 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
                   <SidebarMenuButton 
                     isActive={activeTab === item.id}
                     onClick={() => setActiveTab(item.id)}
+                    className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
@@ -100,20 +101,30 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel>Actions</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground/70">Actions</SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="px-2">
-              <CreateExamDialog />
+              <CreateExamDialog 
+                trigger={
+                  <Button 
+                    className="w-full justify-start gap-2 text-white border-none shadow-sm hover:shadow-md transition-all duration-200"
+                    style={{ backgroundColor: '#2563EB' }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create New Exam
+                  </Button>
+                }
+              />
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter className="border-t border-sidebar-border p-4">
         <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">Welcome, {profile?.full_name}</p>
+          <p className="text-sm text-sidebar-foreground/70">Welcome, {profile?.full_name}</p>
           <ThemeToggle />
-          <Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
+          <Button variant="outline" size="sm" onClick={handleLogout} className="w-full border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
             <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
