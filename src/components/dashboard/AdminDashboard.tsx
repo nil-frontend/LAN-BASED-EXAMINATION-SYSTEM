@@ -4,11 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AdminSidebar from './AdminSidebar';
 import CreateExamDialog from './CreateExamDialog';
 import EditExamDialog from './EditExamDialog';
 import ExamDetailsDialog from './ExamDetailsDialog';
+import ExamResultsDialog from './ExamResultsDialog';
 import MockTestDialog from './MockTestDialog';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
 import TopNavBar from './TopNavBar';
@@ -24,7 +26,10 @@ import {
   Trash2,
   User,
   Mail,
-  Shield
+  Shield,
+  Search,
+  Trophy,
+  Medal
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -54,7 +59,12 @@ const AdminDashboard = () => {
   const [results, setResults] = useState([]);
   const [students, setStudents] = useState([]);
   const [selectedExam, setSelectedExam] = useState(null);
+  const [selectedExamForResults, setSelectedExamForResults] = useState(null);
   const [isExamDetailsOpen, setIsExamDetailsOpen] = useState(false);
+  const [isExamResultsOpen, setIsExamResultsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredExams, setFilteredExams] = useState([]);
+  const [topStudents, setTopStudents] = useState([]);
   const [stats, setStats] = useState({
     totalExams: 0,
     totalStudents: 0,
@@ -103,12 +113,18 @@ const AdminDashboard = () => {
     };
   }, [activeTab]);
 
-  // Handle create exam tab - just switch to exams tab since CreateExamDialog manages its own state
+  // Filter exams based on search query
   useEffect(() => {
-    if (activeTab === 'create-exam') {
-      setActiveTab('exams');
+    if (searchQuery.trim() === '') {
+      setFilteredExams(exams);
+    } else {
+      const filtered = exams.filter((exam: any) =>
+        exam.exam_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exam.title?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredExams(filtered);
     }
-  }, [activeTab]);
+  }, [exams, searchQuery]);
 
   const fetchDashboardData = async () => {
     await Promise.all([
@@ -139,7 +155,7 @@ const AdminDashboard = () => {
         .from('exam_results')
         .select(`
           *,
-          exams!exam_results_exam_id_fkey(title),
+          exams!exam_results_exam_id_fkey(title, exam_name),
           profiles!exam_results_student_id_fkey(full_name)
         `)
         .order('completed_at', { ascending: false });
@@ -153,6 +169,14 @@ const AdminDashboard = () => {
       const avgScore = formattedResults.length > 0 
         ? formattedResults.reduce((sum, result) => sum + result.percentage, 0) / formattedResults.length
         : 0;
+
+      // Get top 3 students
+      const topThree = formattedResults
+        .filter(result => result.profiles?.full_name)
+        .sort((a, b) => b.percentage - a.percentage)
+        .slice(0, 3);
+      
+      setTopStudents(topThree);
 
       setStats(prev => ({
         ...prev,
@@ -250,6 +274,24 @@ const AdminDashboard = () => {
   const handleExamDetailsClick = (exam: any) => {
     setSelectedExam(exam);
     setIsExamDetailsOpen(true);
+  };
+
+  const handleExamResultsClick = (exam: any) => {
+    setSelectedExamForResults(exam);
+    setIsExamResultsOpen(true);
+  };
+
+  const getRankIcon = (index: number) => {
+    switch (index) {
+      case 0:
+        return <Trophy className="h-6 w-6 text-yellow-500" />;
+      case 1:
+        return <Medal className="h-6 w-6 text-gray-400" />;
+      case 2:
+        return <Award className="h-6 w-6 text-amber-600" />;
+      default:
+        return null;
+    }
   };
 
   const renderProfile = () => (
@@ -458,43 +500,111 @@ const AdminDashboard = () => {
   );
 
   const renderResults = () => (
-    <Card className="bg-card">
-      <CardHeader>
-        <CardTitle className="text-card-foreground">All Exam Results</CardTitle>
-        <CardDescription>View all student exam results</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {results.length > 0 ? (
-          <div className="space-y-4">
-            {results.map((result: any) => (
-              <div key={result.id} className="border border-border rounded-lg p-4 bg-card">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-card-foreground">{result.profiles?.full_name || 'Unknown Student'}</h3>
-                    <p className="text-sm text-muted-foreground">{result.exams?.title || 'Unknown Exam'}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Completed: {result.completed_at ? new Date(result.completed_at).toLocaleDateString() : 'N/A'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-card-foreground">{result.percentage.toFixed(1)}%</div>
-                    <div className="text-sm text-muted-foreground">
-                      {result.score}/{result.total_marks}
+    <div className="space-y-6">
+      {/* Top 3 Students Hero Section */}
+      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-l-4 border-l-blue-500">
+        <CardHeader>
+          <CardTitle className="text-card-foreground flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-yellow-500" />
+            Top Performers
+          </CardTitle>
+          <CardDescription>Best performing students across all exams</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {topStudents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {topStudents.map((result: any, index) => (
+                <Card key={result.id} className="border-2 border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      {getRankIcon(index)}
+                      <div className="text-sm font-medium text-muted-foreground">
+                        {index === 0 ? '1st Place' : index === 1 ? '2nd Place' : '3rd Place'}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                    <h3 className="font-semibold text-card-foreground">{result.profiles?.full_name}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">{result.exams?.exam_name}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold text-primary">{result.percentage.toFixed(1)}%</span>
+                      <span className="text-sm text-muted-foreground">{result.score}/{result.total_marks}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No exam results available yet</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Exams List with Search */}
+      <Card className="bg-card">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-card-foreground">Exam Results</CardTitle>
+              <CardDescription>Click on any exam to view detailed results</CardDescription>
+            </div>
+            <div className="relative w-64">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by subject name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
           </div>
-        ) : (
-          <div className="text-center py-8">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-card-foreground mb-2">No results yet</h3>
-            <p className="text-muted-foreground">Exam results will appear here once students complete exams</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {filteredExams.length > 0 ? (
+            <div className="space-y-4">
+              {filteredExams.map((exam: any) => (
+                <Card 
+                  key={exam.id} 
+                  className="border-l-4 border-l-primary bg-card cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => handleExamResultsClick(exam)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-card-foreground mb-1">{exam.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">Subject: {exam.exam_name}</p>
+                        <div className="flex gap-4 text-sm text-muted-foreground">
+                          <span>Duration: {exam.duration_minutes} mins</span>
+                          <span>Total Marks: {exam.total_marks}</span>
+                          <span>Created: {new Date(exam.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Results
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : searchQuery ? (
+            <div className="text-center py-8">
+              <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-card-foreground mb-2">No exams found</h3>
+              <p className="text-muted-foreground">Try adjusting your search query</p>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-card-foreground mb-2">No exams yet</h3>
+              <p className="text-muted-foreground">Create your first exam to see results here</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderExams = () => (
@@ -641,6 +751,17 @@ const AdminDashboard = () => {
           onClose={() => {
             setIsExamDetailsOpen(false);
             setSelectedExam(null);
+          }}
+        />
+      )}
+
+      {selectedExamForResults && (
+        <ExamResultsDialog
+          exam={selectedExamForResults}
+          isOpen={isExamResultsOpen}
+          onClose={() => {
+            setIsExamResultsOpen(false);
+            setSelectedExamForResults(null);
           }}
         />
       )}

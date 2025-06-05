@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ui/theme-toggle';
+import CreateExamDialog from './CreateExamDialog';
 import { 
   BookOpen, 
   BarChart3, 
@@ -45,11 +46,6 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
       id: "overview"
     },
     {
-      title: "Create Exam",
-      icon: Plus,
-      id: "create-exam"
-    },
-    {
       title: "Manage Exams",
       icon: FileText,
       id: "exams"
@@ -58,6 +54,11 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
       title: "Results",
       icon: Users,
       id: "results"
+    },
+    {
+      title: "Students",
+      icon: Users,
+      id: "students"
     },
     {
       title: "Profile",
@@ -95,6 +96,15 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Actions</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="px-2">
+              <CreateExamDialog />
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
