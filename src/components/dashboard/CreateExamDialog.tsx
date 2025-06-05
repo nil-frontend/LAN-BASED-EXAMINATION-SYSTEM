@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -163,8 +162,11 @@ const CreateExamDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button 
+          className="w-full justify-start gap-2 text-white border-none shadow-sm hover:shadow-md transition-all duration-200"
+          style={{ backgroundColor: '#2563EB' }}
+        >
+          <Plus className="h-4 w-4" />
           Create New Exam
         </Button>
       </DialogTrigger>

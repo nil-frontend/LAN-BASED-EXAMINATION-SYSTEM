@@ -101,20 +101,10 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/70">Actions</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground/70">Quick Actions</SidebarGroupLabel>
           <SidebarGroupContent>
-            <div className="px-2">
-              <CreateExamDialog 
-                trigger={
-                  <Button 
-                    className="w-full justify-start gap-2 text-white border-none shadow-sm hover:shadow-md transition-all duration-200"
-                    style={{ backgroundColor: '#2563EB' }}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Create New Exam
-                  </Button>
-                }
-              />
+            <div className="px-2 py-2">
+              <CreateExamDialog />
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
