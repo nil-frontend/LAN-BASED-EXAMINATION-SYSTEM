@@ -16,6 +16,7 @@ interface AdminProfile {
   admin_approved: boolean;
   created_at: string;
   is_admin: boolean;
+  is_super_admin: boolean;
 }
 
 const AdminApplications = () => {
@@ -35,6 +36,7 @@ const AdminApplications = () => {
         .from('profiles')
         .select('*')
         .eq('is_admin', true)
+        .eq('is_super_admin', false) // Exclude super admins
         .order('created_at', { ascending: false });
 
       if (error) throw error;
