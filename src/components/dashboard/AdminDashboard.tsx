@@ -42,6 +42,9 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExam, setSelectedExam] = useState(null);
   const [examResultsDialogOpen, setExamResultsDialogOpen] = useState(false);
+  const [examDetailsDialogOpen, setExamDetailsDialogOpen] = useState(false);
+  const [editExamDialogOpen, setEditExamDialogOpen] = useState(false);
+  const [selectedExamForEdit, setSelectedExamForEdit] = useState(null);
 
   // Fetch data when tab changes
   useEffect(() => {
@@ -178,6 +181,16 @@ const AdminDashboard = () => {
     setExamResultsDialogOpen(true);
   };
 
+  const handleExamDetailsClick = (exam: any) => {
+    setSelectedExam(exam);
+    setExamDetailsDialogOpen(true);
+  };
+
+  const handleEditExamClick = (exam: any) => {
+    setSelectedExamForEdit(exam);
+    setEditExamDialogOpen(true);
+  };
+
   const renderOverview = () => (
     <div className="space-y-6">
       <div>
@@ -288,16 +301,12 @@ const AdminDashboard = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <ExamDetailsDialog exam={exam}>
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </ExamDetailsDialog>
-                        <EditExamDialog exam={exam} onSuccess={fetchExams}>
-                          <Button size="sm" variant="outline">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </EditExamDialog>
+                        <Button size="sm" variant="outline" onClick={() => handleExamDetailsClick(exam)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleEditExamClick(exam)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -419,13 +428,6 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Exam Results Dialog */}
-      <ExamResultsDialog
-        exam={selectedExam}
-        open={examResultsDialogOpen}
-        onOpenChange={setExamResultsDialogOpen}
-      />
     </div>
   );
 
@@ -568,6 +570,26 @@ const AdminDashboard = () => {
           </main>
         </SidebarInset>
       </div>
+
+      {/* Dialogs */}
+      <ExamDetailsDialog
+        exam={selectedExam}
+        isOpen={examDetailsDialogOpen}
+        onClose={() => setExamDetailsDialogOpen(false)}
+      />
+
+      <EditExamDialog
+        exam={selectedExamForEdit}
+        isOpen={editExamDialogOpen}
+        onClose={() => setEditExamDialogOpen(false)}
+        onSuccess={fetchExams}
+      />
+
+      <ExamResultsDialog
+        exam={selectedExam}
+        isOpen={examResultsDialogOpen}
+        onClose={() => setExamResultsDialogOpen(false)}
+      />
     </SidebarProvider>
   );
 };
