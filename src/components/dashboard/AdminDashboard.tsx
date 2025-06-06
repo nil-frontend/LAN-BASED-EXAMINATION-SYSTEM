@@ -43,7 +43,6 @@ const AdminDashboard = () => {
   const [selectedExam, setSelectedExam] = useState(null);
   const [examResultsDialogOpen, setExamResultsDialogOpen] = useState(false);
   const [examDetailsDialogOpen, setExamDetailsDialogOpen] = useState(false);
-  const [editExamDialogOpen, setEditExamDialogOpen] = useState(false);
   const [selectedExamForEdit, setSelectedExamForEdit] = useState(null);
 
   // Fetch data when tab changes
@@ -188,7 +187,6 @@ const AdminDashboard = () => {
 
   const handleEditExamClick = (exam: any) => {
     setSelectedExamForEdit(exam);
-    setEditExamDialogOpen(true);
   };
 
   const renderOverview = () => (
@@ -580,9 +578,7 @@ const AdminDashboard = () => {
 
       <EditExamDialog
         exam={selectedExamForEdit}
-        isOpen={editExamDialogOpen}
-        onClose={() => setEditExamDialogOpen(false)}
-        onSuccess={fetchExams}
+        onExamUpdated={fetchExams}
       />
 
       <ExamResultsDialog
