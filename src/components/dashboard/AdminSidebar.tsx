@@ -24,7 +24,8 @@ import {
   Settings, 
   LogOut,
   Plus,
-  Users
+  Users,
+  Shield
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -60,6 +61,11 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
       icon: Users,
       id: "students"
     },
+    ...(profile?.is_super_admin ? [{
+      title: "Admin Applications",
+      icon: Shield,
+      id: "admin-applications"
+    }] : []),
     {
       title: "Profile",
       icon: Settings,
@@ -74,7 +80,9 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
           <BookOpen className="h-8 w-8 text-blue-600" />
           <div>
             <h1 className="font-semibold text-lg text-sidebar-foreground">Exam Antyvest</h1>
-            <p className="text-sm text-sidebar-foreground/70">Admin Panel</p>
+            <p className="text-sm text-sidebar-foreground/70">
+              {profile?.is_super_admin ? 'Super Admin Panel' : 'Admin Panel'}
+            </p>
           </div>
         </div>
       </SidebarHeader>

@@ -11,6 +11,7 @@ interface Profile {
   full_name: string;
   is_admin: boolean;
   is_student: boolean;
+  is_super_admin: boolean;
   admin_approved: boolean;
 }
 
@@ -22,6 +23,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string, isAdmin: boolean) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -151,7 +153,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             full_name: fullName,
             is_admin: isAdmin,
-            is_student: !isAdmin
+            is_student: !isAdmin,
+            is_super_admin: false
           }
         }
       });
@@ -225,6 +228,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw new Error('Access denied. Please connect to the exam network.');
         }
         console.log('Student IP verification passed');
+      } else if (profileData.is_super_admin) {
+        console.log('Super admin login detected');
+        // Super admin has unrestricted access
       } else if (profileData.is_admin) {
         console.log('Admin login detected, checking approval status...');
         // For admins, check if approved
@@ -235,8 +241,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Admin approval check passed');
       }
 
-      // Store admin IP if admin login (after approval check)
-      if (profileData.is_admin && profileData.admin_approved) {
+      // Store admin IP if admin or super admin login (after approval check)
+      if ((profileData.is_admin && profileData.admin_approved) || profileData.is_super_admin) {
         try {
           const response = await fetch('https://api.ipify.org?format=json');
           const { ip } = await response.json();
@@ -293,6 +299,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/`,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Password Reset Email Sent",
+        description: "Check your email for password reset instructions.",
+      });
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Password Reset Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const value = {
     user,
     profile,
@@ -301,6 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signIn,
     signOut,
+    resetPassword,
   };
 
   return (

@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import StudentSidebar from './StudentSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
@@ -18,7 +21,9 @@ import {
   Play,
   CheckCircle,
   Mail,
-  Shield
+  Shield,
+  Search,
+  Filter
 } from 'lucide-react';
 
 const StudentDashboard = () => {
@@ -28,6 +33,25 @@ const StudentDashboard = () => {
   const [completedExams, setCompletedExams] = useState([]);
   const [results, setResults] = useState([]);
   const [completedExamIds, setCompletedExamIds] = useState(new Set());
+  
+  // Results filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date-desc');
+
+  // Fetch data when tab changes
+  useEffect(() => {
+    switch (activeTab) {
+      case 'exams':
+        fetchExams();
+        fetchResults();
+        break;
+      case 'results':
+        fetchResults();
+        break;
+      default:
+        break;
+    }
+  }, [activeTab, profile]);
 
   useEffect(() => {
     fetchExams();
@@ -35,12 +59,14 @@ const StudentDashboard = () => {
     
     // Auto-refresh every 2 seconds
     const interval = setInterval(() => {
-      fetchExams();
-      fetchResults();
+      if (activeTab === 'exams') {
+        fetchExams();
+        fetchResults();
+      }
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [profile]);
+  }, [profile, activeTab]);
 
   const fetchExams = async () => {
     try {
@@ -259,43 +285,135 @@ const StudentDashboard = () => {
     </div>
   );
 
+  // Sort and filter results
+  const filteredAndSortedResults = React.useMemo(() => {
+    let filtered = results.filter((result: any) =>
+      result.exams?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      result.exams?.exam_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Sort results
+    filtered.sort((a: any, b: any) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return (a.exams?.title || '').localeCompare(b.exams?.title || '');
+        case 'name-desc':
+          return (b.exams?.title || '').localeCompare(a.exams?.title || '');
+        case 'marks-high':
+          return b.percentage - a.percentage;
+        case 'marks-low':
+          return a.percentage - b.percentage;
+        case 'date-desc':
+          return new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime();
+        case 'date-asc':
+          return new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime();
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [results, searchTerm, sortBy]);
+
   const renderResults = () => (
-    <Card className="bg-card">
-      <CardHeader>
-        <CardTitle className="text-card-foreground">My Exam Results</CardTitle>
-        <CardDescription>Your performance history</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {results.length > 0 ? (
-          <div className="space-y-4">
-            {results.map((result: any) => (
-              <div key={result.id} className="border border-border rounded-lg p-4 bg-card">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-card-foreground">{result.exams?.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Completed on {new Date(result.completed_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-card-foreground">{result.percentage.toFixed(1)}%</div>
-                    <div className="text-sm text-muted-foreground">
-                      {result.score}/{result.total_marks}
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-card-foreground">My Exam Results</h1>
+        <p className="text-muted-foreground">Your performance history</p>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Search & Filter
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search by exam name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="w-full md:w-auto">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date-desc">Date (Newest First)</SelectItem>
+                  <SelectItem value="date-asc">Date (Oldest First)</SelectItem>
+                  <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                  <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                  <SelectItem value="marks-high">Marks (High to Low)</SelectItem>
+                  <SelectItem value="marks-low">Marks (Low to High)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Results List */}
+      <Card className="bg-card">
+        <CardHeader>
+          <CardTitle className="text-card-foreground">Results ({filteredAndSortedResults.length})</CardTitle>
+          <CardDescription>Your exam performance details</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {filteredAndSortedResults.length > 0 ? (
+            <div className="space-y-4">
+              {filteredAndSortedResults.map((result: any) => (
+                <div key={result.id} className="border border-border rounded-lg p-4 bg-card hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-card-foreground mb-1">{result.exams?.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">{result.exams?.exam_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Completed on {new Date(result.completed_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-card-foreground mb-1">
+                        {result.percentage.toFixed(1)}%
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {result.score}/{result.total_marks} marks
+                      </div>
+                      <div className={`text-xs font-medium mt-1 ${
+                        result.percentage >= 90 ? 'text-green-600 dark:text-green-400' :
+                        result.percentage >= 75 ? 'text-blue-600 dark:text-blue-400' :
+                        result.percentage >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>
+                        {result.percentage >= 90 ? 'Excellent' :
+                         result.percentage >= 75 ? 'Good' :
+                         result.percentage >= 60 ? 'Average' : 'Needs Improvement'}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-card-foreground mb-2">No results yet</h3>
-            <p className="text-muted-foreground">Take an exam to see your results here</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-card-foreground mb-2">
+                {searchTerm ? 'No results found' : 'No results yet'}
+              </h3>
+              <p className="text-muted-foreground">
+                {searchTerm ? 'Try adjusting your search criteria' : 'Take an exam to see your results here'}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderProfile = () => (
