@@ -20,8 +20,7 @@ const Index = () => {
     return <AuthPage />;
   }
 
-  // Super admin and admin both use the same dashboard
-  if (profile.is_super_admin || profile.is_admin) {
+  if (profile.is_admin) {
     return <AdminDashboard />;
   }
 
