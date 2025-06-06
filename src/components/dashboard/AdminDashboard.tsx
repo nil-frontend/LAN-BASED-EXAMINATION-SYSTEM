@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +16,7 @@ import ExamDetailsDialog from './ExamDetailsDialog';
 import ExamResultsDialog from './ExamResultsDialog';
 import AdminApplications from './AdminApplications';
 import TopNavBar from './TopNavBar';
+import CreateExamDialog from './CreateExamDialog';
 import { 
   FileText, 
   Users, 
@@ -29,7 +31,10 @@ import {
   Play,
   User,
   Mail,
-  Shield
+  Shield,
+  Plus,
+  TrendingUp,
+  Target
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -190,54 +195,152 @@ const AdminDashboard = () => {
   };
 
   const renderOverview = () => (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
-        <p className="text-muted-foreground">Welcome to your admin dashboard</p>
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-lg p-6 border border-blue-100 dark:border-blue-900">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard Overview</h1>
+            <p className="text-muted-foreground text-lg">
+              {profile?.is_super_admin ? 'Super Admin Control Center' : 'Admin Management Dashboard'}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Monitor and manage your examination system
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-muted-foreground">Welcome back,</div>
+            <div className="text-xl font-semibold text-foreground">{profile?.full_name}</div>
+            <Badge variant="outline" className="mt-1">
+              {profile?.is_super_admin ? 'Super Admin' : 'Admin'}
+            </Badge>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full -translate-y-10 translate-x-10"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Exams</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Exams</CardTitle>
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+              <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{exams.length}</div>
-            <p className="text-xs text-muted-foreground">Active exams in system</p>
+            <div className="text-2xl font-bold text-foreground">{exams.length}</div>
+            <p className="text-xs text-muted-foreground flex items-center mt-1">
+              <TrendingUp className="h-3 w-3 mr-1" />
+              Active examinations
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Students</CardTitle>
+            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+              <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{students.length}</div>
+            <p className="text-xs text-muted-foreground flex items-center mt-1">
+              <User className="h-3 w-3 mr-1" />
+              Registered users
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Results</CardTitle>
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+              <BarChart3 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{results.length}</div>
+            <p className="text-xs text-muted-foreground flex items-center mt-1">
+              <Target className="h-3 w-3 mr-1" />
+              Completed submissions
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Avg. Performance</CardTitle>
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+              <Award className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">85%</div>
+            <p className="text-xs text-muted-foreground flex items-center mt-1">
+              <TrendingUp className="h-3 w-3 mr-1" />
+              Overall score average
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-600" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription>Latest system activities and updates</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">System running smoothly</p>
+                  <p className="text-xs text-muted-foreground">All services operational</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Dashboard updated</p>
+                  <p className="text-xs text-muted-foreground">Latest performance metrics</p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-purple-600" />
+              Quick Actions
+            </CardTitle>
+            <CardDescription>Frequently used administrative tasks</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{students.length}</div>
-            <p className="text-xs text-muted-foreground">Registered students</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Results</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{results.length}</div>
-            <p className="text-xs text-muted-foreground">Exam submissions</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Score</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">85%</div>
-            <p className="text-xs text-muted-foreground">Average performance</p>
+            <div className="grid grid-cols-1 gap-3">
+              <Button variant="outline" className="justify-start h-auto p-4" onClick={() => setActiveTab('exams')}>
+                <FileText className="h-4 w-4 mr-2" />
+                <div className="text-left">
+                  <div className="font-medium">Manage Exams</div>
+                  <div className="text-xs text-muted-foreground">Create and edit examinations</div>
+                </div>
+              </Button>
+              <Button variant="outline" className="justify-start h-auto p-4" onClick={() => setActiveTab('students')}>
+                <Users className="h-4 w-4 mr-2" />
+                <div className="text-left">
+                  <div className="font-medium">View Students</div>
+                  <div className="text-xs text-muted-foreground">Manage student accounts</div>
+                </div>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -249,8 +352,9 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Manage Exams</h1>
-          <p className="text-muted-foreground">Create, edit, and manage your exams</p>
+          <p className="text-muted-foreground">Create, edit, and manage your examinations</p>
         </div>
+        <CreateExamDialog />
       </div>
 
       <Card>
@@ -430,54 +534,67 @@ const AdminDashboard = () => {
   );
 
   const renderStudents = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>Students Management</CardTitle>
-        <CardDescription>View and manage student accounts</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {students.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Joined Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.map((student: any) => (
-                <TableRow key={student.id}>
-                  <TableCell className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    {student.full_name}
-                  </TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    {student.email}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(student.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-400">
-                      Active
-                    </Badge>
-                  </TableCell>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Students Management</h1>
+        <p className="text-muted-foreground">View and manage student accounts</p>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>All Students</CardTitle>
+          <CardDescription>Registered student accounts in the system</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {students.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-left">Name</TableHead>
+                  <TableHead className="text-left">Email</TableHead>
+                  <TableHead className="text-left">Joined Date</TableHead>
+                  <TableHead className="text-left">Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="text-center py-8">
-            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No students found</h3>
-            <p className="text-muted-foreground">Students will appear here once they register</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              </TableHeader>
+              <TableBody>
+                {students.map((student: any) => (
+                  <TableRow key={student.id}>
+                    <TableCell className="text-left">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <span className="font-medium">{student.full_name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-left">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span>{student.email}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-left">
+                      {new Date(student.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-400">
+                        Active
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No students found</h3>
+              <p className="text-muted-foreground">Students will appear here once they register</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderProfile = () => (
@@ -562,7 +679,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen flex w-full">
         <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <SidebarInset>
-          <TopNavBar />
+          {!profile?.is_super_admin && <TopNavBar />}
           <main className="flex-1 p-6">
             {renderContent()}
           </main>
