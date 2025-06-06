@@ -44,6 +44,7 @@ const AdminDashboard = () => {
   const [students, setStudents] = useState([]);
   const [results, setResults] = useState([]);
   const [topStudents, setTopStudents] = useState([]);
+  const [recentExams, setRecentExams] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExam, setSelectedExam] = useState(null);
   const [examResultsDialogOpen, setExamResultsDialogOpen] = useState(false);
@@ -77,15 +78,17 @@ const AdminDashboard = () => {
   const fetchOverviewData = async () => {
     try {
       // Fetch basic counts for overview
-      const [examsRes, studentsRes, resultsRes] = await Promise.all([
+      const [examsRes, studentsRes, resultsRes, recentExamsRes] = await Promise.all([
         supabase.from('exams').select('id').eq('is_active', true),
         supabase.from('profiles').select('id').eq('is_student', true),
-        supabase.from('exam_results').select('id')
+        supabase.from('exam_results').select('id'),
+        supabase.from('exams').select('*').order('created_at', { ascending: false }).limit(5)
       ]);
 
       setExams(examsRes.data || []);
       setStudents(studentsRes.data || []);
       setResults(resultsRes.data || []);
+      setRecentExams(recentExamsRes.data || []);
     } catch (error) {
       console.error('Error fetching overview data:', error);
     }
@@ -291,27 +294,35 @@ const AdminDashboard = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-600" />
-              Recent Activity
+              <FileText className="h-5 w-5 text-blue-600" />
+              Recent Exams
             </CardTitle>
-            <CardDescription>Latest system activities and updates</CardDescription>
+            <CardDescription>Latest created examinations</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">System running smoothly</p>
-                  <p className="text-xs text-muted-foreground">All services operational</p>
+              {recentExams.length > 0 ? (
+                recentExams.map((exam: any) => (
+                  <div key={exam.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{exam.title}</p>
+                      <p className="text-xs text-muted-foreground">{exam.exam_name} • {exam.total_marks} marks</p>
+                    </div>
+                    <Badge variant={exam.is_active ? "default" : "secondary"} className="text-xs">
+                      {exam.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">No exams created yet</p>
+                    <p className="text-xs text-muted-foreground">Create your first exam to get started</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Dashboard updated</p>
-                  <p className="text-xs text-muted-foreground">Latest performance metrics</p>
-                </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -550,16 +561,16 @@ const AdminDashboard = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-left">Name</TableHead>
-                  <TableHead className="text-left">Email</TableHead>
-                  <TableHead className="text-left">Joined Date</TableHead>
-                  <TableHead className="text-left">Status</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Joined Date</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {students.map((student: any) => (
                   <TableRow key={student.id}>
-                    <TableCell className="text-left">
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
                           <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -567,16 +578,16 @@ const AdminDashboard = () => {
                         <span className="font-medium">{student.full_name}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-left">
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         <span>{student.email}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-left">
+                    <TableCell>
                       {new Date(student.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-left">
+                    <TableCell>
                       <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-400">
                         Active
                       </Badge>

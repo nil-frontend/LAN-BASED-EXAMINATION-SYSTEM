@@ -88,7 +88,7 @@ const AuthPage = () => {
           <div className="flex justify-center mb-4">
             <BookOpen className="h-12 w-12 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Exam Nexus</h1>
+          <h1 className="text-3xl font-bold text-foreground">Exam Antyvest</h1>
           <p className="text-muted-foreground mt-2">Online Examination System</p>
         </div>
 
