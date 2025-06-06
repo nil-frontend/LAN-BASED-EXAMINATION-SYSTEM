@@ -27,11 +27,18 @@ const AdminApplications = () => {
 
   useEffect(() => {
     fetchAdmins();
+    
+    // Set up auto-refresh every 3 seconds
+    const interval = setInterval(() => {
+      fetchAdmins();
+    }, 3000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
   }, []);
 
   const fetchAdmins = async () => {
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -67,6 +74,7 @@ const AdminApplications = () => {
         description: `Admin ${approved ? 'approved' : 'revoked'} successfully`,
       });
 
+      // Immediately refresh the data after update
       fetchAdmins();
     } catch (error) {
       console.error('Error updating admin status:', error);
