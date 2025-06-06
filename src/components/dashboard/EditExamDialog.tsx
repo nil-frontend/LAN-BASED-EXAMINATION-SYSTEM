@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -8,14 +7,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Question {
@@ -32,11 +30,12 @@ interface Question {
 interface EditExamDialogProps {
   exam: any;
   onExamUpdated: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
+const EditExamDialog = ({ exam, onExamUpdated, isOpen, onClose }: EditExamDialogProps) => {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   
   const [examData, setExamData] = useState({
@@ -51,7 +50,7 @@ const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
 
   useEffect(() => {
-    if (exam && open) {
+    if (exam && isOpen) {
       setExamData({
         title: exam.title || '',
         exam_name: exam.exam_name || '',
@@ -62,7 +61,7 @@ const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
       });
       fetchQuestions();
     }
-  }, [exam, open]);
+  }, [exam, isOpen]);
 
   const fetchQuestions = async () => {
     try {
@@ -160,7 +159,7 @@ const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
         description: 'Exam updated successfully!'
       });
 
-      setOpen(false);
+      onClose();
       onExamUpdated();
 
     } catch (error) {
@@ -176,13 +175,7 @@ const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Exam</DialogTitle>
@@ -358,7 +351,7 @@ const EditExamDialog = ({ exam, onExamUpdated }: EditExamDialogProps) => {
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import AdminSidebar from './AdminSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
 import EditExamDialog from './EditExamDialog';
@@ -50,6 +60,7 @@ const AdminDashboard = () => {
   const [examResultsDialogOpen, setExamResultsDialogOpen] = useState(false);
   const [examDetailsDialogOpen, setExamDetailsDialogOpen] = useState(false);
   const [selectedExamForEdit, setSelectedExamForEdit] = useState(null);
+  const [editExamDialogOpen, setEditExamDialogOpen] = useState(false);
 
   // Fetch data when tab changes
   useEffect(() => {
@@ -195,6 +206,7 @@ const AdminDashboard = () => {
 
   const handleEditExamClick = (exam: any) => {
     setSelectedExamForEdit(exam);
+    setEditExamDialogOpen(true);
   };
 
   const renderOverview = () => (
@@ -420,14 +432,35 @@ const AdminDashboard = () => {
                         <Button size="sm" variant="outline" onClick={() => handleEditExamClick(exam)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => deleteExam(exam.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the exam
+                                "{exam.title}" and all associated data including questions and results.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteExam(exam.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -707,6 +740,11 @@ const AdminDashboard = () => {
       <EditExamDialog
         exam={selectedExamForEdit}
         onExamUpdated={fetchExams}
+        isOpen={editExamDialogOpen}
+        onClose={() => {
+          setEditExamDialogOpen(false);
+          setSelectedExamForEdit(null);
+        }}
       />
 
       <ExamResultsDialog
