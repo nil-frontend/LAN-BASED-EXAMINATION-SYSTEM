@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -317,22 +316,15 @@ const AdminDashboard = ({ activeTab, setActiveTab }: AdminDashboardProps) => {
       </Card>
 
       {/* Dialogs */}
-      <CreateExamDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSuccess={() => {
-          fetchExams();
-          fetchStats();
-        }}
-      />
+      <CreateExamDialog />
 
       {selectedExam && (
         <>
           <EditExamDialog
             exam={selectedExam}
-            open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
-            onSuccess={() => {
+            isOpen={editDialogOpen}
+            onClose={() => setEditDialogOpen(false)}
+            onExamUpdated={() => {
               fetchExams();
               fetchStats();
               setSelectedExam(null);
@@ -341,14 +333,14 @@ const AdminDashboard = ({ activeTab, setActiveTab }: AdminDashboardProps) => {
 
           <ExamDetailsDialog
             exam={selectedExam}
-            open={detailsDialogOpen}
-            onOpenChange={setDetailsDialogOpen}
+            isOpen={detailsDialogOpen}
+            onClose={() => setDetailsDialogOpen(false)}
           />
 
           <ExamResultsDialog
             exam={selectedExam}
-            open={resultsDialogOpen}
-            onOpenChange={setResultsDialogOpen}
+            isOpen={resultsDialogOpen}
+            onClose={() => setResultsDialogOpen(false)}
           />
         </>
       )}
