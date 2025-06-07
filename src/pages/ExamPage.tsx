@@ -226,22 +226,22 @@ const ExamPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (hasAlreadyTaken) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-center">Exam Already Completed</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <AlertCircle className="h-16 w-16 text-green-500 mx-auto" />
-            <p className="text-gray-600">You have already completed this exam.</p>
+            <p className="text-muted-foreground">You have already completed this exam.</p>
             <Button onClick={() => navigate('/')} className="w-full">
               Back to Dashboard
             </Button>
@@ -253,13 +253,13 @@ const ExamPage = () => {
 
   if (isExamCompleted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-center">Exam Completed!</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <div className="text-lg text-green-600 font-medium">
+            <div className="text-lg text-green-600 dark:text-green-400 font-medium">
               Your exam has been submitted successfully
             </div>
             <Button onClick={() => navigate('/')} className="w-full">
@@ -273,7 +273,7 @@ const ExamPage = () => {
 
   if (!isExamStarted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -289,10 +289,10 @@ const ExamPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <div className="flex items-start gap-2">
-                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                <div className="text-sm text-yellow-800">
+                <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                <div className="text-sm text-yellow-800 dark:text-yellow-200">
                   <p className="font-medium mb-1">Important Instructions:</p>
                   <ul className="list-disc list-inside space-y-1">
                     <li>Once started, the timer will begin counting down</li>
@@ -310,10 +310,10 @@ const ExamPage = () => {
                 <Clock className="h-4 w-4" />
                 <span>Duration: {exam?.duration_minutes} minutes</span>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Total Questions: {questions.length}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Total Marks: {exam?.total_marks}
               </div>
             </div>
@@ -330,18 +330,18 @@ const ExamPage = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-4">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6 mb-4">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-xl font-semibold">{exam?.title}</h1>
-            <div className="flex items-center gap-2 text-lg font-mono text-red-600">
+            <h1 className="text-xl font-semibold text-card-foreground">{exam?.title}</h1>
+            <div className="flex items-center gap-2 text-lg font-mono text-red-600 dark:text-red-400">
               <Clock className="h-5 w-5" />
               {formatTime(timeLeft)}
             </div>
           </div>
           
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted-foreground">
             Question {currentQuestionIndex + 1} of {questions.length} | {currentQuestion?.marks} mark(s)
           </div>
         </div>
@@ -349,7 +349,7 @@ const ExamPage = () => {
         {currentQuestion && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle className="text-lg">
+              <CardTitle className="text-lg text-card-foreground">
                 {currentQuestion.question_text}
               </CardTitle>
             </CardHeader>
@@ -357,22 +357,22 @@ const ExamPage = () => {
               {['A', 'B', 'C', 'D'].map((option) => (
                 <div
                   key={option}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                  className={`p-4 border border-border rounded-lg cursor-pointer transition-all hover:shadow-md ${
                     answers[currentQuestion.id] === option
-                      ? 'bg-blue-50 border-blue-300'
-                      : 'hover:bg-gray-50 border-gray-200'
+                      ? 'bg-primary/10 border-primary'
+                      : 'hover:bg-muted/50'
                   }`}
                   onClick={() => selectAnswer(currentQuestion.id, option)}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                       answers[currentQuestion.id] === option
-                        ? 'border-blue-600 bg-blue-600 text-white'
-                        : 'border-gray-300'
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-muted-foreground'
                     }`}>
                       {option}
                     </div>
-                    <span>{currentQuestion[`option_${option.toLowerCase()}` as keyof Question]}</span>
+                    <span className="text-card-foreground">{currentQuestion[`option_${option.toLowerCase()}` as keyof Question]}</span>
                   </div>
                 </div>
               ))}
@@ -389,7 +389,7 @@ const ExamPage = () => {
             Previous
           </Button>
           
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             {Object.keys(answers).length} of {questions.length} answered
           </span>
           
@@ -413,7 +413,7 @@ const ExamPage = () => {
 
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm text-gray-600 mb-2">Question Navigator:</div>
+            <div className="text-sm text-muted-foreground mb-2">Question Navigator:</div>
             <div className="flex gap-1 flex-wrap">
               {questions.map((_, index) => (
                 <button
@@ -421,10 +421,10 @@ const ExamPage = () => {
                   onClick={() => setCurrentQuestionIndex(index)}
                   className={`w-10 h-10 rounded text-sm border transition-colors ${
                     index === currentQuestionIndex
-                      ? 'bg-blue-600 text-white border-blue-600'
+                      ? 'bg-primary text-primary-foreground border-primary'
                       : answers[questions[index].id]
-                      ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200'
-                      : 'bg-gray-100 hover:bg-gray-200 border-gray-300'
+                      ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-green-300 dark:border-green-800 hover:bg-green-200 dark:hover:bg-green-900/30'
+                      : 'bg-muted hover:bg-muted/80 border-border text-muted-foreground'
                   }`}
                 >
                   {index + 1}

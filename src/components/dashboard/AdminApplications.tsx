@@ -27,6 +27,14 @@ const AdminApplications = () => {
 
   useEffect(() => {
     fetchAdmins();
+    
+    // Set up interval to fetch data every 3 seconds
+    const interval = setInterval(() => {
+      fetchAdmins();
+    }, 3000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
   }, []);
 
   const fetchAdmins = async () => {
@@ -67,6 +75,7 @@ const AdminApplications = () => {
         description: `Admin ${approved ? 'approved' : 'revoked'} successfully`,
       });
 
+      // Immediately fetch updated data
       fetchAdmins();
     } catch (error) {
       console.error('Error updating admin status:', error);
@@ -86,10 +95,10 @@ const AdminApplications = () => {
   const pendingAdmins = filteredAdmins.filter(admin => !admin.admin_approved);
   const approvedAdmins = filteredAdmins.filter(admin => admin.admin_approved);
 
-  if (loading) {
+  if (loading && admins.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
