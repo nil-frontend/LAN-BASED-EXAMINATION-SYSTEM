@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, XCircle, Search, Shield, Mail, User } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AdminProfile {
   id: string;
@@ -24,9 +25,17 @@ const AdminApplications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   useEffect(() => {
     fetchAdmins();
+    
+    // Set up auto-refresh every 3 seconds
+    const interval = setInterval(() => {
+      fetchAdmins();
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchAdmins = async () => {
@@ -78,6 +87,11 @@ const AdminApplications = () => {
     }
   };
 
+  // Only show this component if user is super admin
+  if (!profile?.is_super_admin) {
+    return null;
+  }
+
   const filteredAdmins = admins.filter(admin =>
     admin.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     admin.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -89,7 +103,7 @@ const AdminApplications = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -164,7 +178,7 @@ const AdminApplications = () => {
                         <Button
                           size="sm"
                           onClick={() => updateAdminStatus(admin.id, true)}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-green-600 hover:bg-green-700 text-white"
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Approve
