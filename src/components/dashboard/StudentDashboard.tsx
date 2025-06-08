@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import StudentSidebar from './StudentSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
@@ -23,7 +23,8 @@ import {
   Mail,
   Shield,
   Search,
-  Filter
+  Filter,
+  RefreshCw
 } from 'lucide-react';
 
 const StudentDashboard = () => {
@@ -235,6 +236,28 @@ const StudentDashboard = () => {
 
   const renderExams = () => (
     <div className="space-y-4 sm:space-y-6">
+      {/* Refresh Button */}
+      <div className="flex justify-end">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span className="hidden sm:inline">Refresh</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Refresh</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
       <StudentDashboardCards />
 
       {/* Available Exams Section */}

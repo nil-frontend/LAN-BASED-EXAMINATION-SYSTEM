@@ -5,47 +5,36 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebar from './AdminSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
+import CreateExamDialog from './CreateExamDialog';
 import EditExamDialog from './EditExamDialog';
 import ExamDetailsDialog from './ExamDetailsDialog';
 import ExamResultsDialog from './ExamResultsDialog';
 import AdminApplications from './AdminApplications';
 import TopNavBar from './TopNavBar';
-import CreateExamDialog from './CreateExamDialog';
 import { 
-  FileText, 
-  Users, 
-  BarChart3, 
   Clock, 
   Award, 
-  Calendar,
-  Search,
-  Trash2,
-  Edit,
-  Eye,
-  Play,
   User,
+  FileText,
+  Calendar,
+  Play,
+  CheckCircle,
   Mail,
   Shield,
-  Plus,
+  Search,
+  Filter,
+  BarChart3,
+  Users,
+  FileCheck,
   TrendingUp,
-  Target
+  Eye,
+  Edit,
+  Trash2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const AdminDashboard = () => {
   const { profile } = useAuth();
@@ -210,7 +199,7 @@ const AdminDashboard = () => {
   };
 
   const renderOverview = () => (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6">
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-lg p-6 border border-blue-100 dark:border-blue-900">
         <div className="flex items-center justify-between">
           <div>
@@ -371,7 +360,7 @@ const AdminDashboard = () => {
   );
 
   const renderExams = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Manage Exams</h1>
@@ -480,7 +469,7 @@ const AdminDashboard = () => {
   );
 
   const renderResults = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Exam Results</h1>
         <p className="text-muted-foreground">View and analyze student performance</p>
@@ -578,7 +567,7 @@ const AdminDashboard = () => {
   );
 
   const renderStudents = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Students Management</h1>
         <p className="text-muted-foreground">View and manage student accounts</p>
@@ -642,7 +631,7 @@ const AdminDashboard = () => {
   );
 
   const renderProfile = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>
@@ -710,7 +699,7 @@ const AdminDashboard = () => {
       case 'students':
         return renderStudents();
       case 'admin-applications':
-        return profile?.is_super_admin ? <AdminApplications /> : renderOverview();
+        return <AdminApplications />;
       case 'profile':
         return renderProfile();
       default:
@@ -723,35 +712,16 @@ const AdminDashboard = () => {
       <div className="min-h-screen flex w-full">
         <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <SidebarInset>
-          {!profile?.is_super_admin && <TopNavBar />}
-          <main className="flex-1 p-6">
+          <div className="flex items-center gap-2 p-4 border-b md:hidden">
+            <SidebarTrigger />
+            <h1 className="text-lg font-semibold">Exam Antyvest</h1>
+          </div>
+          <TopNavBar />
+          <main className="flex-1 p-3 sm:p-4 lg:p-6">
             {renderContent()}
           </main>
         </SidebarInset>
       </div>
-
-      {/* Dialogs */}
-      <ExamDetailsDialog
-        exam={selectedExam}
-        isOpen={examDetailsDialogOpen}
-        onClose={() => setExamDetailsDialogOpen(false)}
-      />
-
-      <EditExamDialog
-        exam={selectedExamForEdit}
-        onExamUpdated={fetchExams}
-        isOpen={editExamDialogOpen}
-        onClose={() => {
-          setEditExamDialogOpen(false);
-          setSelectedExamForEdit(null);
-        }}
-      />
-
-      <ExamResultsDialog
-        exam={selectedExam}
-        isOpen={examResultsDialogOpen}
-        onClose={() => setExamResultsDialogOpen(false)}
-      />
     </SidebarProvider>
   );
 };
