@@ -66,8 +66,6 @@ const AdminDashboard = () => {
   const [examDetailsDialogOpen, setExamDetailsDialogOpen] = useState(false);
   const [selectedExamForEdit, setSelectedExamForEdit] = useState(null);
   const [editExamDialogOpen, setEditExamDialogOpen] = useState(false);
-  const [mockTestDialogOpen, setMockTestDialogOpen] = useState(false);
-  const [selectedExamForMock, setSelectedExamForMock] = useState(null);
 
   // Fetch data when tab changes
   useEffect(() => {
@@ -216,11 +214,6 @@ const AdminDashboard = () => {
   const handleEditExamClick = (exam: any) => {
     setSelectedExamForEdit(exam);
     setEditExamDialogOpen(true);
-  };
-
-  const handleMockTestClick = (exam: any) => {
-    setSelectedExamForMock(exam);
-    setMockTestDialogOpen(true);
   };
 
   const renderOverview = () => (
@@ -456,15 +449,7 @@ const AdminDashboard = () => {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => handleMockTestClick(exam)}
-                          className="text-blue-600 hover:text-blue-700"
-                          title="Take Mock Test"
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
+                        <MockTestDialog exam={exam} />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -538,21 +523,12 @@ const AdminDashboard = () => {
         <EditExamDialog
           exam={selectedExamForEdit}
           isOpen={editExamDialogOpen}
+          onExamUpdated={() => {
+            fetchExams(); // Refresh the exam list after editing
+          }}
           onClose={() => {
             setEditExamDialogOpen(false);
             setSelectedExamForEdit(null);
-            fetchExams(); // Refresh the exam list after editing
-          }}
-        />
-      )}
-
-      {selectedExamForMock && (
-        <MockTestDialog
-          exam={selectedExamForMock}
-          isOpen={mockTestDialogOpen}
-          onClose={() => {
-            setMockTestDialogOpen(false);
-            setSelectedExamForMock(null);
           }}
         />
       )}
