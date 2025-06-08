@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +25,7 @@ import CreateExamDialog from './CreateExamDialog';
 import EditExamDialog from './EditExamDialog';
 import ExamDetailsDialog from './ExamDetailsDialog';
 import ExamResultsDialog from './ExamResultsDialog';
+import MockTestDialog from './MockTestDialog';
 import AdminApplications from './AdminApplications';
 import TopNavBar from './TopNavBar';
 import { 
@@ -47,7 +47,8 @@ import {
   Eye,
   Edit,
   Trash2,
-  Target
+  Target,
+  Menu
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -65,6 +66,8 @@ const AdminDashboard = () => {
   const [examDetailsDialogOpen, setExamDetailsDialogOpen] = useState(false);
   const [selectedExamForEdit, setSelectedExamForEdit] = useState(null);
   const [editExamDialogOpen, setEditExamDialogOpen] = useState(false);
+  const [mockTestDialogOpen, setMockTestDialogOpen] = useState(false);
+  const [selectedExamForMock, setSelectedExamForMock] = useState(null);
 
   // Fetch data when tab changes
   useEffect(() => {
@@ -188,8 +191,10 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       fetchExams();
+      toast.success('Exam deleted successfully');
     } catch (error) {
       console.error('Error deleting exam:', error);
+      toast.error('Failed to delete exam');
     }
   };
 
@@ -211,6 +216,11 @@ const AdminDashboard = () => {
   const handleEditExamClick = (exam: any) => {
     setSelectedExamForEdit(exam);
     setEditExamDialogOpen(true);
+  };
+
+  const handleMockTestClick = (exam: any) => {
+    setSelectedExamForMock(exam);
+    setMockTestDialogOpen(true);
   };
 
   const renderOverview = () => (
@@ -386,7 +396,7 @@ const AdminDashboard = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className=' text-start'>Search Exams</CardTitle>
+          <CardTitle className='text-start'>Search Exams</CardTitle>
         </CardHeader>
         <CardContent>
           <Input
@@ -430,11 +440,30 @@ const AdminDashboard = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleExamDetailsClick(exam)}>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleExamDetailsClick(exam)}
+                          title="View Details"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleEditExamClick(exam)}>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleEditExamClick(exam)}
+                          title="Edit Exam"
+                        >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleMockTestClick(exam)}
+                          className="text-blue-600 hover:text-blue-700"
+                          title="Take Mock Test"
+                        >
+                          <Play className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -442,6 +471,7 @@ const AdminDashboard = () => {
                               size="sm"
                               variant="outline"
                               className="text-red-600 hover:text-red-700"
+                              title="Delete Exam"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -480,6 +510,52 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      {selectedExam && (
+        <ExamDetailsDialog
+          exam={selectedExam}
+          isOpen={examDetailsDialogOpen}
+          onClose={() => {
+            setExamDetailsDialogOpen(false);
+            setSelectedExam(null);
+          }}
+        />
+      )}
+
+      {selectedExam && (
+        <ExamResultsDialog
+          exam={selectedExam}
+          isOpen={examResultsDialogOpen}
+          onClose={() => {
+            setExamResultsDialogOpen(false);
+            setSelectedExam(null);
+          }}
+        />
+      )}
+
+      {selectedExamForEdit && (
+        <EditExamDialog
+          exam={selectedExamForEdit}
+          isOpen={editExamDialogOpen}
+          onClose={() => {
+            setEditExamDialogOpen(false);
+            setSelectedExamForEdit(null);
+            fetchExams(); // Refresh the exam list after editing
+          }}
+        />
+      )}
+
+      {selectedExamForMock && (
+        <MockTestDialog
+          exam={selectedExamForMock}
+          isOpen={mockTestDialogOpen}
+          onClose={() => {
+            setMockTestDialogOpen(false);
+            setSelectedExamForMock(null);
+          }}
+        />
+      )}
     </div>
   );
 
