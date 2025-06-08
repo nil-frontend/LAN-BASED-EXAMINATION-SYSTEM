@@ -129,13 +129,24 @@ const MockTestDialog = ({ exam }: MockTestDialogProps) => {
     setScore(0);
   };
 
+  const handleDialogOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      resetTest();
+    }
+  };
+
   if (!isTestStarted && !isTestCompleted) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleDialogOpenChange}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Play className="h-4 w-4 mr-2" />
-            Mock Test
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="text-blue-600 hover:text-blue-700"
+            title="Take Mock Test"
+          >
+            <Play className="h-4 w-4" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-md">
@@ -169,10 +180,17 @@ const MockTestDialog = ({ exam }: MockTestDialogProps) => {
   if (isTestCompleted) {
     const percentage = ((score / exam.total_marks) * 100).toFixed(1);
     return (
-      <Dialog open={open} onOpenChange={(newOpen) => {
-        if (!newOpen) resetTest();
-        setOpen(newOpen);
-      }}>
+      <Dialog open={open} onOpenChange={handleDialogOpenChange}>
+        <DialogTrigger asChild>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="text-blue-600 hover:text-blue-700"
+            title="Take Mock Test"
+          >
+            <Play className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Mock Test Results</DialogTitle>
@@ -200,10 +218,17 @@ const MockTestDialog = ({ exam }: MockTestDialogProps) => {
   const currentQuestion = questions[currentQuestionIndex];
   
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) resetTest();
-      setOpen(newOpen);
-    }}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
+      <DialogTrigger asChild>
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="text-blue-600 hover:text-blue-700"
+          title="Take Mock Test"
+        >
+          <Play className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
