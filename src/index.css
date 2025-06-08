@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +98,42 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Responsive typography */
+  h1 {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+  
+  h2 {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+  
+  h3 {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+  
+  /* Ensure text doesn't overflow on small screens */
+  .break-words {
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+@layer components {
+  /* Mobile-first responsive spacing */
+  .container-responsive {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Responsive button sizes */
+  .btn-responsive {
+    @apply text-sm sm:text-base px-3 sm:px-4 py-2;
+  }
+  
+  /* Responsive card padding */
+  .card-responsive {
+    @apply p-3 sm:p-4 lg:p-6;
   }
 }

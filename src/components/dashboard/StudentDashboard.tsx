@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import StudentSidebar from './StudentSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
 import TakeExamDialog from './TakeExamDialog';
@@ -61,6 +61,8 @@ const StudentDashboard = () => {
     const interval = setInterval(() => {
       if (activeTab === 'exams') {
         fetchExams();
+        fetchResults();
+      } else if (activeTab === 'results') {
         fetchResults();
       }
     }, 2000);
@@ -142,37 +144,37 @@ const StudentDashboard = () => {
     return (
       <Card key={exam.id} className="border-l-4 border-l-primary hover:shadow-md transition-shadow bg-card">
         <CardHeader className="pb-3">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <CardTitle className="text-lg mb-1 text-card-foreground">{exam.title}</CardTitle>
-              <p className="text-sm text-muted-foreground mb-2">{exam.exam_name}</p>
-              <p className="text-sm text-muted-foreground">{exam.description}</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-base sm:text-lg mb-1 text-card-foreground break-words">{exam.title}</CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2 break-words">{exam.exam_name}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground break-words">{exam.description}</p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
               {isCompleted && (
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
+                <div className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Completed
                 </div>
               )}
               
               {!isCompleted && examStatus === 'scheduled' && (
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800">
+                <div className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800">
                   <Clock className="h-3 w-3 mr-1" />
                   Scheduled
                 </div>
               )}
               
               {!isCompleted && examStatus === 'started' && (
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
+                <div className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
                   <Play className="h-3 w-3 mr-1" />
                   Started
                 </div>
               )}
               
               {!isCompleted && examStatus === 'available' && (
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                <div className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
                   <FileText className="h-3 w-3 mr-1" />
                   Available
                 </div>
@@ -181,12 +183,12 @@ const StudentDashboard = () => {
               {canStart ? (
                 <TakeExamDialog exam={exam} />
               ) : isCompleted ? (
-                <Button size="sm" disabled variant="outline">
+                <Button size="sm" disabled variant="outline" className="w-full sm:w-auto">
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Completed
                 </Button>
               ) : (
-                <Button size="sm" disabled variant="outline">
+                <Button size="sm" disabled variant="outline" className="w-full sm:w-auto">
                   <Clock className="h-4 w-4 mr-2" />
                   Scheduled
                 </Button>
@@ -196,20 +198,20 @@ const StudentDashboard = () => {
         </CardHeader>
         
         <CardContent className="pt-0">
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <Clock className="h-5 w-5 mx-auto mb-1 text-blue-600 dark:text-blue-400" />
+              <Clock className="h-4 sm:h-5 w-4 sm:w-5 mx-auto mb-1 text-blue-600 dark:text-blue-400" />
               <div className="text-sm font-medium text-card-foreground">{exam.duration_minutes} mins</div>
               <div className="text-xs text-muted-foreground">Duration</div>
             </div>
             <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-              <Award className="h-5 w-5 mx-auto mb-1 text-green-600 dark:text-green-400" />
+              <Award className="h-4 sm:h-5 w-4 sm:w-5 mx-auto mb-1 text-green-600 dark:text-green-400" />
               <div className="text-sm font-medium text-card-foreground">{exam.total_marks}</div>
               <div className="text-xs text-muted-foreground">Total Marks</div>
             </div>
             <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-              <Calendar className="h-5 w-5 mx-auto mb-1 text-purple-600 dark:text-purple-400" />
-              <div className="text-sm font-medium text-card-foreground">
+              <Calendar className="h-4 sm:h-5 w-4 sm:w-5 mx-auto mb-1 text-purple-600 dark:text-purple-400" />
+              <div className="text-xs sm:text-sm font-medium text-card-foreground break-words">
                 {exam.exam_start_at ? formatDateTime(exam.exam_start_at) : 'Anytime'}
               </div>
               <div className="text-xs text-muted-foreground">Start Time</div>
@@ -219,8 +221,8 @@ const StudentDashboard = () => {
           {exam.exam_start_at && examStatus === 'scheduled' && !isCompleted && (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                <span className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
+                <Calendar className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-medium text-yellow-800 dark:text-yellow-400 break-words">
                   Scheduled for: {formatDateTime(exam.exam_start_at)}
                 </span>
               </div>
@@ -232,17 +234,17 @@ const StudentDashboard = () => {
   };
 
   const renderExams = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <StudentDashboardCards />
 
       {/* Available Exams Section */}
       <Card className="bg-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-card-foreground">
-            <FileText className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-card-foreground text-lg sm:text-xl">
+            <FileText className="h-4 sm:h-5 w-4 sm:w-5" />
             Available Exams
           </CardTitle>
-          <CardDescription>Exams you can participate in</CardDescription>
+          <CardDescription className="text-sm">Exams you can participate in</CardDescription>
         </CardHeader>
         <CardContent>
           {availableExams.length > 0 ? (
@@ -250,10 +252,10 @@ const StudentDashboard = () => {
               {availableExams.map((exam: any) => renderExamCard(exam, false))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Clock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-card-foreground mb-2">No available exams</h3>
-              <p className="text-muted-foreground">Check back later for new exams</p>
+            <div className="text-center py-8 sm:py-12">
+              <Clock className="h-12 sm:h-16 w-12 sm:w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-card-foreground mb-2">No available exams</h3>
+              <p className="text-sm text-muted-foreground">Check back later for new exams</p>
             </div>
           )}
         </CardContent>
@@ -262,11 +264,11 @@ const StudentDashboard = () => {
       {/* Completed Exams Section */}
       <Card className="bg-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-card-foreground">
-            <CheckCircle className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-card-foreground text-lg sm:text-xl">
+            <CheckCircle className="h-4 sm:h-5 w-4 sm:w-5" />
             Completed Exams
           </CardTitle>
-          <CardDescription>Exams you have already taken</CardDescription>
+          <CardDescription className="text-sm">Exams you have already taken</CardDescription>
         </CardHeader>
         <CardContent>
           {completedExams.length > 0 ? (
@@ -274,10 +276,10 @@ const StudentDashboard = () => {
               {completedExams.map((exam: any) => renderExamCard(exam, true))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <CheckCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-card-foreground mb-2">No completed exams</h3>
-              <p className="text-muted-foreground">Complete some exams to see them here</p>
+            <div className="text-center py-8 sm:py-12">
+              <CheckCircle className="h-12 sm:h-16 w-12 sm:w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-card-foreground mb-2">No completed exams</h3>
+              <p className="text-sm text-muted-foreground">Complete some exams to see them here</p>
             </div>
           )}
         </CardContent>
@@ -316,22 +318,22 @@ const StudentDashboard = () => {
   }, [results, searchTerm, sortBy]);
 
   const renderResults = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-card-foreground">My Exam Results</h1>
-        <p className="text-muted-foreground">Your performance history</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-card-foreground">My Exam Results</h1>
+        <p className="text-sm text-muted-foreground">Your performance history</p>
       </div>
 
       {/* Search and Filter Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Search className="h-4 sm:h-5 w-4 sm:w-5" />
             Search & Filter
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
                 placeholder="Search by exam name..."
@@ -340,9 +342,9 @@ const StudentDashboard = () => {
                 className="w-full"
               />
             </div>
-            <div className="w-full md:w-auto">
+            <div className="w-full sm:w-auto">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full md:w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -362,27 +364,27 @@ const StudentDashboard = () => {
       {/* Results List */}
       <Card className="bg-card">
         <CardHeader>
-          <CardTitle className="text-card-foreground">Results ({filteredAndSortedResults.length})</CardTitle>
-          <CardDescription>Your exam performance details</CardDescription>
+          <CardTitle className="text-card-foreground text-lg sm:text-xl">Results ({filteredAndSortedResults.length})</CardTitle>
+          <CardDescription className="text-sm">Your exam performance details</CardDescription>
         </CardHeader>
         <CardContent>
           {filteredAndSortedResults.length > 0 ? (
             <div className="space-y-4">
               {filteredAndSortedResults.map((result: any) => (
-                <div key={result.id} className="border border-border rounded-lg p-4 bg-card hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-card-foreground mb-1">{result.exams?.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{result.exams?.exam_name}</p>
-                      <p className="text-sm text-muted-foreground">
+                <div key={result.id} className="border border-border rounded-lg p-3 sm:p-4 bg-card hover:shadow-md transition-shadow">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-card-foreground mb-1 text-sm sm:text-base break-words">{result.exams?.title}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-2 break-words">{result.exams?.exam_name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Completed on {new Date(result.completed_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-card-foreground mb-1">
+                    <div className="text-right w-full sm:w-auto">
+                      <div className="text-xl sm:text-2xl font-bold text-card-foreground mb-1">
                         {result.percentage.toFixed(1)}%
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
                         {result.score}/{result.total_marks} marks
                       </div>
                       <div className={`text-xs font-medium mt-1 ${
@@ -402,11 +404,11 @@ const StudentDashboard = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-card-foreground mb-2">
+              <Award className="h-10 sm:h-12 w-10 sm:w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-card-foreground mb-2">
                 {searchTerm ? 'No results found' : 'No results yet'}
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {searchTerm ? 'Try adjusting your search criteria' : 'Take an exam to see your results here'}
               </p>
             </div>
@@ -417,47 +419,47 @@ const StudentDashboard = () => {
   );
 
   const renderProfile = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card className="bg-card">
         <CardHeader>
-          <CardTitle className="text-card-foreground">Profile Information</CardTitle>
-          <CardDescription>Your account details</CardDescription>
+          <CardTitle className="text-card-foreground text-lg sm:text-xl">Profile Information</CardTitle>
+          <CardDescription className="text-sm">Your account details</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-4">
-                <div className="p-4 border border-border rounded-lg bg-muted/20">
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Full Name</label>
+                <div className="p-3 sm:p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 block">Full Name</label>
                   <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-primary" />
-                    <p className="text-card-foreground font-medium">{profile?.full_name}</p>
+                    <User className="h-4 sm:h-5 w-4 sm:w-5 text-primary flex-shrink-0" />
+                    <p className="text-card-foreground font-medium text-sm sm:text-base break-words">{profile?.full_name}</p>
                   </div>
                 </div>
                 
-                <div className="p-4 border border-border rounded-lg bg-muted/20">
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Email Address</label>
+                <div className="p-3 sm:p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 block">Email Address</label>
                   <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-primary" />
-                    <p className="text-card-foreground font-medium">{profile?.email}</p>
+                    <Mail className="h-4 sm:h-5 w-4 sm:w-5 text-primary flex-shrink-0" />
+                    <p className="text-card-foreground font-medium text-sm sm:text-base break-words">{profile?.email}</p>
                   </div>
                 </div>
               </div>
               
               <div className="space-y-4">
-                <div className="p-4 border border-border rounded-lg bg-muted/20">
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Role</label>
+                <div className="p-3 sm:p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 block">Role</label>
                   <div className="flex items-center gap-3">
-                    <Shield className="h-5 w-5 text-primary" />
-                    <p className="text-card-foreground font-medium">Student</p>
+                    <Shield className="h-4 sm:h-5 w-4 sm:w-5 text-primary flex-shrink-0" />
+                    <p className="text-card-foreground font-medium text-sm sm:text-base">Student</p>
                   </div>
                 </div>
                 
-                <div className="p-4 border border-border rounded-lg bg-muted/20">
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Account Status</label>
+                <div className="p-3 sm:p-4 border border-border rounded-lg bg-muted/20">
+                  <label className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 block">Account Status</label>
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <p className="text-green-500 font-medium">Active</p>
+                    <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                    <p className="text-green-500 font-medium text-sm sm:text-base">Active</p>
                   </div>
                 </div>
               </div>
@@ -490,8 +492,12 @@ const StudentDashboard = () => {
       <div className="min-h-screen flex w-full">
         <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <SidebarInset>
+          <div className="flex items-center gap-2 p-4 border-b md:hidden">
+            <SidebarTrigger />
+            <h1 className="text-lg font-semibold">Exam Antyvest</h1>
+          </div>
           <TopNavBar />
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-3 sm:p-4 lg:p-6">
             {renderContent()}
           </main>
         </SidebarInset>
