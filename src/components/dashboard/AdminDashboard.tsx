@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { 
+  AlertDialog, 
+  AlertDialogTrigger, 
+  AlertDialogContent, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogCancel, 
+  AlertDialogAction 
+} from '@/components/ui/alert-dialog';
 import AdminSidebar from './AdminSidebar';
 import PasswordUpdateDialog from './PasswordUpdateDialog';
 import CreateExamDialog from './CreateExamDialog';
@@ -32,7 +46,8 @@ import {
   TrendingUp,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  Target
 } from 'lucide-react';
 import { toast } from 'sonner';
 

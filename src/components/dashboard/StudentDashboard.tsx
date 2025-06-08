@@ -120,6 +120,11 @@ const StudentDashboard = () => {
     }
   };
 
+  const handleRefresh = () => {
+    fetchExams();
+    fetchResults();
+  };
+
   const isExamStarted = (examStartAt: string | null) => {
     if (!examStartAt) return true; // If no start time set, exam is available
     return new Date() >= new Date(examStartAt);
