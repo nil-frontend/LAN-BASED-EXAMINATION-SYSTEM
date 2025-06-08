@@ -386,7 +386,7 @@ const AdminDashboard = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Search Exams</CardTitle>
+          <CardTitle className=' text-start'>Search Exams</CardTitle>
         </CardHeader>
         <CardContent>
           <Input

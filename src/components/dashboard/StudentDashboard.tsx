@@ -121,6 +121,7 @@ const StudentDashboard = () => {
   };
 
   const handleRefresh = () => {
+    location.reload();
     fetchExams();
     fetchResults();
   };

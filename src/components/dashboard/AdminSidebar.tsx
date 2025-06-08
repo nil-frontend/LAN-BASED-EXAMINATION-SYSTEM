@@ -111,7 +111,7 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs sm:text-sm text-sidebar-foreground/70">Quick Actions</SidebarGroupLabel>
           <SidebarGroupContent>
-            <div className="px-2 py-2">
+            <div className="px-2 text-start py-2">
               <CreateExamDialog />
             </div>
           </SidebarGroupContent>

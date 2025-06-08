@@ -163,11 +163,11 @@ const CreateExamDialog = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
-          className="w-full justify-start gap-2 text-white border-none shadow-sm hover:shadow-md transition-all duration-200"
+          className="w-auto justify-between gap-2 text-white border-none shadow-sm hover:shadow-md transition-all duration-200"
           style={{ backgroundColor: '#2563EB' }}
         >
-          <Plus className="h-4 w-4" />
           Create New Exam
+          <Plus className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
