@@ -1,0 +1,17 @@
+directories:
+  output: releases
+  buildResources: dist
+appId: Anty-Vest
+win:
+  target:
+    - nsis
+files:
+  - filter:
+      - dist/**/*
+      - electron/main.cjs
+      - node_modules/**/*
+      - package.json
+nsis:
+  uninstallDisplayName: uninstall this app
+  allowToChangeInstallationDirectory: true
+electronVersion: 36.4.0

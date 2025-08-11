@@ -1,4 +1,81 @@
-# Welcome to your Lovable project
+# LAN Based Examination System for Institution/Organization
+
+## 🌐 Live Demo
+
+**URL**: [https://lan-examanty-vest.vercel.app](https://lan-examanty-vest.vercel.app)
+
+---
+
+## 👨‍💻 Author
+
+**Nilkantha Dwibedi**
+--- *GitHub* (https://github.com/nil-frontend)
+
+---
+
+## 🛠 Project Setup
+
+Follow these steps to run the project locally:
+
+```bash
+# Step 1: Clone the repository
+git clone <YOUR_GIT_URL>
+cd <YOUR_PROJECT_NAME>
+
+# Step 2: Install dependencies
+# Make sure you have Node.js and npm installed. If not, install it using nvm:
+# https://github.com/nvm-sh/nvm#installing-and-updating
+npm install
+
+# Step 3: Start the development server
+npm run dev
+
+# Your app will be running at http://localhost:5173
+```
+
+## 🧩 Tech Stack
+
+- ⚡ **Vite** — Lightning-fast build tool
+- ⚛️ **React** — Component-based UI
+- 🧠 **TypeScript** — Strongly typed JavaScript
+- 🎨 **Tailwind CSS** — Utility-first CSS framework
+- 🧱 **shadcn/ui** — UI component library
+
+---
+
+## 🚀 Deployment
+
+This project is deployed on **Vercel**.
+
+To deploy your own version:
+
+1. Push your code to GitHub.
+2. Go to [https://vercel.com](https://vercel.com) and import your GitHub repository.
+3. Vercel will auto-detect your Vite configuration and deploy it.
+
+---
+
+## 🌐 Custom Domain
+
+To connect a custom domain on Vercel:
+
+1. Open your project in the Vercel dashboard.
+2. Navigate to **Settings > Domains**.
+3. Add your domain and follow the DNS instructions provided by Vercel.
+
+---
+
+## 📬 Contact
+
+If you have questions or feedback, feel free to reach out:
+
+📧 **Email**: feedbacknil@gmail.com
+
+
+
+
+
+<!-- # Welcome to your Lovable project
 
 ## Project info
 
@@ -70,4 +147,4 @@ Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide) -->
