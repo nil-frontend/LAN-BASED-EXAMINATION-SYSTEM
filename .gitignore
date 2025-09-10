@@ -7,6 +7,8 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+releases/win-unpacked/LAN-Exam_Anty-Vest.exe 
+
 node_modules
 dist
 dist-ssr
