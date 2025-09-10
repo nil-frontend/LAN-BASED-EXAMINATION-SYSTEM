@@ -19,8 +19,8 @@ Follow these steps to run the project locally:
 
 ```bash
 # Step 1: Clone the repository
-git clone <https://github.com/nil-frontend/LAN-BASED-EXAMINATION-SYSTEM.git>
-cd <LAN-BASED-EXAMINATION-SYSTEM>
+git clone https://github.com/nil-frontend/LAN-BASED-EXAMINATION-SYSTEM.git
+cd LAN-BASED-EXAMINATION-SYSTEM
 
 # Step 2: Install dependencies
 # Make sure you have Node.js and npm installed. If not, install it using nvm:
